@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be6fb85d785e91428f274e1bb426afd, type: 3}
+  m_Name: DicePhysicsSettings
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.DicePhysicsSettings
+  diceSizeMeters: 0.035
+  massKilograms: 0.02
+  linearDamping: 0.1
+  angularDamping: 0.3
+  maxAngularSpeedRadiansPerSecond: 50
+  contactOffsetMeters: 0.002
+  physicsMaterial: {fileID: 13400000, guid: 0715de2ba3f363c4bb83a96016e32243, type: 2}
+  throwVelocityScale: 1
+  throwSmoothingSeconds: 0.1
+  restSpeedMetersPerSecond: 0.02
+  restHoldSeconds: 0.4
+  rollTimeoutSeconds: 6
+  bounceThresholdMetersPerSecond: 0.3
