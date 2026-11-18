@@ -18,6 +18,9 @@ namespace StudyXR.Strike
         [Tooltip("시험 던지기 출발 위치·방향 (보통 XR 카메라)")]
         [SerializeField] private Transform throwOrigin;
 
+        [Tooltip("#2 경기장. 연결하면 주사위별 장외 표시와 F7(바닥 무작위 점 위에서 떨어뜨리기)을 쓴다")]
+        [SerializeField] private DiceArena arena;
+
         [Header("시험 던지기")]
         [Tooltip("던지는 속도 (m/s). throwVelocityScale이 곱해진다")]
         [SerializeField] private float testThrowSpeed = 2.5f;
@@ -31,7 +34,9 @@ namespace StudyXR.Strike
         private InputAction throwAction;
         private InputAction selectableAction;
         private InputAction reapplyAction;
+        private InputAction dropOnFloorAction;
         private bool throwQueued;
+        private bool dropQueued;
         private int nextDiceIndex;
         private bool diceSelectable = true;
 
@@ -40,9 +45,11 @@ namespace StudyXR.Strike
             throwAction = QuestButtons.Create(QuestButton.LeftStickClick, "Test Dice Throw", "<Keyboard>/f4");
             selectableAction = QuestButtons.Create(QuestButton.X, "Test Dice Selectable", "<Keyboard>/f5");
             reapplyAction = QuestButtons.Create(QuestButton.Y, "Test Dice Reapply", "<Keyboard>/f6");
+            dropOnFloorAction = QuestButtons.Create(QuestButton.A, "Test Dice Drop On Floor", "<Keyboard>/f7");
             throwAction.Enable();
             selectableAction.Enable();
             reapplyAction.Enable();
+            dropOnFloorAction.Enable();
         }
 
         private void OnDisable()
@@ -50,6 +57,7 @@ namespace StudyXR.Strike
             throwAction.Dispose();
             selectableAction.Dispose();
             reapplyAction.Dispose();
+            dropOnFloorAction.Dispose();
         }
 
         private void Start()
@@ -66,13 +74,25 @@ namespace StudyXR.Strike
                 SetAllSelectable(diceSelectable);
             }
             if (reapplyAction.WasPressedThisFrame()) ReapplySettings();
+            if (dropOnFloorAction.WasPressedThisFrame()) dropQueued = true;
         }
 
         private void FixedUpdate()
         {
-            if (throwQueued == false) return;
-            throwQueued = false;
+            if (throwQueued)
+            {
+                throwQueued = false;
+                ThrowNextDice();
+            }
+            if (dropQueued)
+            {
+                dropQueued = false;
+                DropNextDiceOnArenaFloor();
+            }
+        }
 
+        private void ThrowNextDice()
+        {
             Dice dice = testDice[nextDiceIndex];
             nextDiceIndex = (nextDiceIndex + 1) % testDice.Length;
             if (dice.GetComponent<XRGrabInteractable>().isSelected) return;
@@ -83,6 +103,22 @@ namespace StudyXR.Strike
             body.rotation = Random.rotation;
             body.linearVelocity = direction * testThrowSpeed * settings.throwVelocityScale;
             body.angularVelocity = Random.onUnitSphere * testSpinSpeed;
+        }
+
+        /// <summary>
+        /// 경기장의 RandomFloorPoint 위 10cm에서 다음 주사위를 가만히 떨어뜨린다. 점이 바닥 안쪽에 고르게 나오는지 보는 시험.
+        /// </summary>
+        private void DropNextDiceOnArenaFloor()
+        {
+            Dice dice = testDice[nextDiceIndex];
+            nextDiceIndex = (nextDiceIndex + 1) % testDice.Length;
+            if (dice.GetComponent<XRGrabInteractable>().isSelected) return;
+
+            Rigidbody body = dice.GetComponent<Rigidbody>();
+            body.position = arena.RandomFloorPoint() + Vector3.up * 0.1f;
+            body.rotation = Random.rotation;
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
         }
 
         [ContextMenu("튜닝 다시 적용 (F6)")]
@@ -101,11 +137,13 @@ namespace StudyXR.Strike
         private void OnGUI()
         {
             GUI.skin.label.fontSize = 22;
-            GUI.Label(new Rect(10, 10, 900, 30), $"F4 던지기 · F5 집기 허용({diceSelectable}) · F6 튜닝 다시 적용");
+            GUI.Label(new Rect(10, 10, 900, 30), $"F4 던지기 · F5 집기 허용({diceSelectable}) · F6 튜닝 다시 적용 · F7 바닥 무작위 점에 떨어뜨리기");
             for (int i = 0; i < testDice.Length; i++)
             {
                 Dice dice = testDice[i];
                 string state = dice.IsResting ? $"멈춤 · 윗면 {dice.ReadTopFace()}" : $"구르는 중 · 지금 윗면 {dice.ReadTopFace()}";
+                string place = arena.Contains(dice.transform.position) ? "경기장 안" : "장외";
+                state += $" · {place}";
                 GUI.Label(new Rect(10, 44 + i * 30, 900, 30), $"{dice.name}: {state}");
             }
         }
