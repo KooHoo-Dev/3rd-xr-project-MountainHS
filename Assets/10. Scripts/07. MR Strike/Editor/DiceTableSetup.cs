@@ -100,17 +100,25 @@ namespace StudyXR.Strike.EditorTools
             root.AddComponent<DiceThrow>();
             Dice dice = root.AddComponent<Dice>();
 
-            // 면 글자 6개 (눈으로 보이는 표시). 어느 방향이 어느 면인지는 Dice의 6개 면 필드 기본값이 정한다.
-            CreateFaceLabel(root.transform, "1", Vector3.up, Color.black);
-            CreateFaceLabel(root.transform, "2", Vector3.back, Color.black);
-            CreateFaceLabel(root.transform, "3", Vector3.right, Color.black);
-            CreateFaceLabel(root.transform, "4", Vector3.left, Color.black);
-            CreateFaceLabel(root.transform, "5", Vector3.forward, Color.black);
-            CreateFaceLabel(root.transform, "X", Vector3.down, Color.red);
+            Transform[] faceLabels =
+            {
+                CreateFaceLabel(root.transform, "1", Vector3.up, Color.black),
+                CreateFaceLabel(root.transform, "2", Vector3.back, Color.black),
+                CreateFaceLabel(root.transform, "3", Vector3.right, Color.black),
+                CreateFaceLabel(root.transform, "4", Vector3.left, Color.black),
+                CreateFaceLabel(root.transform, "5", Vector3.forward, Color.black),
+                CreateFaceLabel(root.transform, "X", Vector3.down, Color.red),
+            };
 
             SerializedObject serializedDice = new SerializedObject(dice);
             serializedDice.FindProperty("settings").objectReferenceValue = settings;
             serializedDice.FindProperty("bodyRenderer").objectReferenceValue = root.GetComponent<MeshRenderer>();
+            SerializedProperty faceLabelsProperty = serializedDice.FindProperty("faceLabels");
+            faceLabelsProperty.arraySize = faceLabels.Length;
+            for (int i = 0; i < faceLabels.Length; i++)
+            {
+                faceLabelsProperty.GetArrayElementAtIndex(i).objectReferenceValue = faceLabels[i];
+            }
             serializedDice.ApplyModifiedPropertiesWithoutUndo();
 
             root.transform.localScale = Vector3.one * settings.diceSizeMeters;

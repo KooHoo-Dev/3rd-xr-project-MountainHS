@@ -20,19 +20,9 @@ namespace StudyXR.Strike
         [Tooltip("시작할 때 적용할 튜닝 에셋")]
         [SerializeField] private DicePhysicsSettings settings;
 
-        [Header("면 (주사위 로컬 축 방향 → 그 방향 면의 숫자)")]
-        [Tooltip("로컬 +X 방향 면. 면 글자 오브젝트를 옮겨 붙이면 이 6개도 같이 바꾼다")]
-        [SerializeField] private DiceFace positiveXFace = DiceFace.Three;
-        [Tooltip("로컬 -X 방향 면")]
-        [SerializeField] private DiceFace negativeXFace = DiceFace.Four;
-        [Tooltip("로컬 +Y 방향 면")]
-        [SerializeField] private DiceFace positiveYFace = DiceFace.One;
-        [Tooltip("로컬 -Y 방향 면")]
-        [SerializeField] private DiceFace negativeYFace = DiceFace.X;
-        [Tooltip("로컬 +Z 방향 면")]
-        [SerializeField] private DiceFace positiveZFace = DiceFace.Five;
-        [Tooltip("로컬 -Z 방향 면")]
-        [SerializeField] private DiceFace negativeZFace = DiceFace.Two;
+        [Header("면")]
+        [Tooltip("면 라벨 6개. 순서 = DiceFace 순서 (One, Two, Three, Four, Five, X)")]
+        [SerializeField] private Transform[] faceLabels;
 
         [Header("강조")]
         [SerializeField] private Renderer bodyRenderer;
@@ -73,36 +63,22 @@ namespace StudyXR.Strike
         /// <summary>
         /// 위를 가장 많이 향한 면을 읽는다. 턴 진행이 주사위가 멈춘 뒤(또는 시간초과 때) 부른다.
         /// </summary>
-        /// <remarks>
-        /// 월드 위쪽을 주사위 로컬 좌표로 바꿔, 절댓값이 가장 큰 로컬 축과 그 부호로 면을 고른다.
-        /// 비길 때는 X → Y → Z 순으로 먼저 걸린 축을 쓴다.
-        /// </remarks>
-        /// <returns>월드 위쪽에 가장 가까운 로컬 축 방향의 면. 기울어 멈췄어도 가장 가까운 면을 돌려준다.</returns>
+        /// <returns>면 라벨 중 주사위 중심에서 본 방향이 월드 위쪽과 가장 가까운 면. 기울어 멈췄어도 가장 가까운 면을 돌려준다.</returns>
         public DiceFace ReadTopFace()
         {
-            Vector3 localUp = transform.InverseTransformDirection(Vector3.up);
-            float xAlignment = Mathf.Abs(localUp.x);
-            float yAlignment = Mathf.Abs(localUp.y);
-            float zAlignment = Mathf.Abs(localUp.z);
-
-            bool isXAxisClosest = xAlignment >= yAlignment && xAlignment >= zAlignment;
-            bool isYAxisClosest = yAlignment >= xAlignment && yAlignment >= zAlignment;
-
-            if (isXAxisClosest) return PickFaceBySign(localUp.x, positiveXFace, negativeXFace);
-            if (isYAxisClosest) return PickFaceBySign(localUp.y, positiveYFace, negativeYFace);
-            return PickFaceBySign(localUp.z, positiveZFace, negativeZFace);
-        }
-
-        /// <summary>
-        /// 한 축에서 월드 위쪽이 양의 방향이면 양의 면을, 음의 방향이면 음의 면을 고른다.
-        /// </summary>
-        /// <param name="alignment">그 축 성분의 부호 있는 값 (로컬 위쪽 벡터의 한 성분)</param>
-        /// <param name="positiveFace">0 이상일 때의 면</param>
-        /// <param name="negativeFace">0 미만일 때의 면</param>
-        private DiceFace PickFaceBySign(float alignment, DiceFace positiveFace, DiceFace negativeFace)
-        {
-            if (alignment >= 0f) return positiveFace;
-            return negativeFace;
+            int topFaceIndex = 0;
+            float highestUpAlignment = float.NegativeInfinity;
+            for (int faceIndex = 0; faceIndex < faceLabels.Length; faceIndex++)
+            {
+                Vector3 faceDirection = (faceLabels[faceIndex].position - transform.position).normalized;
+                float upAlignment = Vector3.Dot(faceDirection, Vector3.up);
+                if (upAlignment > highestUpAlignment)
+                {
+                    highestUpAlignment = upAlignment;
+                    topFaceIndex = faceIndex;
+                }
+            }
+            return (DiceFace)topFaceIndex;
         }
 
         /// <summary>
