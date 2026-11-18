@@ -1192,12 +1192,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 6887017165676228902}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd12ed09f8848624a92c235ad1b5d43c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.ThrowPhysics.PhysicalThrow
+  m_Script: {fileID: 11500000, guid: 3c9e5a1b7d4f4e2a8b6d1f0a9c2e7d45, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.DiceThrow
   maxReleaseSpeed: 25
-  flightAngularDamping: 0.05
-  rollAngularDamping: 2.5
 --- !u!114 &1025025573084616255
 MonoBehaviour:
   m_ObjectHideFlags: 0

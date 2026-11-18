@@ -8,8 +8,8 @@ namespace StudyXR.Strike
     /// 판정은 하지 않는다. 턴 진행(#5)이 이 두 값을 읽어 판정한다.
     /// </summary>
     /// <remarks>
-    /// 손으로 던지는 계산은 같은 오브젝트의 <c>PhysicalThrow</c>(샘플)가 한다.
-    /// PhysicalThrow는 놓을 때와 부딪힐 때 Rigidbody.angularDamping을 자기 값으로 덮어쓴다.
+    /// 손으로 던지는 계산은 같은 오브젝트의 <see cref="DiceThrow"/>가 한다.
+    /// DiceThrow는 회전 감쇠를 건드리지 않으므로 튜닝 에셋의 angularDamping이 항상 그대로 유지된다.
     /// </remarks>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
@@ -156,7 +156,7 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 던지기 배율과 평균 구간을 XRGrabInteractable에 넣는다. PhysicalThrow가 놓는 순간 이 값을 읽는다.
+        /// 던지기 배율과 평균 구간을 XRGrabInteractable에 넣는다. DiceThrow가 놓는 순간 이 값을 읽는다.
         /// </summary>
         private void ApplyThrow()
         {

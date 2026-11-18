@@ -24,7 +24,7 @@ namespace StudyXR.Strike
         [Tooltip("공기 저항처럼 이동 속도를 줄이는 값. 클수록 덜 날아가고 덜 미끄러진다")]
         public float linearDamping = 0.1f;
 
-        [Tooltip("회전 속도를 줄이는 값. 클수록 덜 구른다. PhysicalThrow가 놓을 때·부딪힐 때 덮어쓴다")]
+        [Tooltip("회전 속도를 줄이는 값. 클수록 덜 구른다. 던지는 동안과 구르는 동안 항상 이 값이 쓰인다")]
         public float angularDamping = 0.3f;
 
         [Tooltip("회전 속도 상한 (rad/s). Unity 기본 7은 주사위에 너무 낮다")]
@@ -36,7 +36,7 @@ namespace StudyXR.Strike
         [Tooltip("주사위 표면 재질 (마찰·튕김)")]
         public PhysicsMaterial physicsMaterial;
 
-        [Header("던지기 (XRGrabInteractable에 적용, PhysicalThrow가 읽음)")]
+        [Header("던지기 (XRGrabInteractable에 적용, DiceThrow가 읽음)")]
         [Tooltip("손 속도에 곱하는 배율. 1 = 손 속도 그대로")]
         public float throwVelocityScale = 1f;
 

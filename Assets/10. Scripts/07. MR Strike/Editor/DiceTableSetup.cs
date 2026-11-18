@@ -1,5 +1,4 @@
 using StudyXR.Common;
-using StudyXR.ThrowPhysics;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -84,7 +83,7 @@ namespace StudyXR.Strike.EditorTools
         }
 
         /// <summary>
-        /// 한 변 1 크기 큐브 + 면 라벨 6개 + Rigidbody + XRGrabInteractable + PhysicalThrow + Dice.
+        /// 한 변 1 크기 큐브 + 면 라벨 6개 + Rigidbody + XRGrabInteractable + DiceThrow + Dice.
         /// 실제 크기는 Dice.ApplySettings가 루트 크기로 맞춘다.
         /// </summary>
         private static void LoadOrCreateDicePrefab(DicePhysicsSettings settings)
@@ -98,7 +97,7 @@ namespace StudyXR.Strike.EditorTools
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             root.AddComponent<XRGrabInteractable>();
-            root.AddComponent<PhysicalThrow>();
+            root.AddComponent<DiceThrow>();
             Dice dice = root.AddComponent<Dice>();
 
             Transform[] faceLabels =
