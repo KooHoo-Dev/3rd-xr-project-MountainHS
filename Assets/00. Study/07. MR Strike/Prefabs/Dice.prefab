@@ -1209,13 +1209,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.Dice
   settings: {fileID: 11400000, guid: 31e59ae71d3913945a98c3c535d14872, type: 2}
-  faceLabels:
-  - {fileID: 585961393022675037}
-  - {fileID: 7277516960165007645}
-  - {fileID: 3582105684568938232}
-  - {fileID: 4401317480134068372}
-  - {fileID: 6727791534705897955}
-  - {fileID: 8827955408913992814}
+  positiveXFace: 2
+  negativeXFace: 3
+  positiveYFace: 0
+  negativeYFace: 5
+  positiveZFace: 4
+  negativeZFace: 1
   bodyRenderer: {fileID: 7699194748232154789}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   selectableColor: {r: 1, g: 0.85, b: 0.3, a: 1}
