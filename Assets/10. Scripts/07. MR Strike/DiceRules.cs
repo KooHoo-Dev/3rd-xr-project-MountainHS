@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace StudyXR.Strike
@@ -19,7 +20,8 @@ namespace StudyXR.Strike
         /// <returns>짝이 된 숫자 목록 (One→Five 순). 없으면 빈 목록.</returns>
         public static List<DiceFace> FindPairedFaces(IReadOnlyList<DiceFace> boardFaces)
         {
-            int[] countByFace = CountFaces(boardFaces);
+            Span<int> countByFace = stackalloc int[FaceKindCount];
+            CountFaces(boardFaces, countByFace);
             List<DiceFace> pairedFaces = new List<DiceFace>();
 
             for (int faceIndex = 0; faceIndex < countByFace.Length; faceIndex++)
@@ -43,7 +45,8 @@ namespace StudyXR.Strike
         /// <returns>0~1. 판이 비면 0.</returns>
         public static float MatchChance(IReadOnlyList<DiceFace> boardFaces)
         {
-            int[] countByFace = CountFaces(boardFaces);
+            Span<int> countByFace = stackalloc int[FaceKindCount];
+            CountFaces(boardFaces, countByFace);
             int distinctNumberCount = 0;
 
             for (int faceIndex = 0; faceIndex < countByFace.Length; faceIndex++)
@@ -63,16 +66,14 @@ namespace StudyXR.Strike
         /// <summary>
         /// 면 종류별 개수를 센다. 인덱스는 <see cref="DiceFace"/> 값.
         /// </summary>
-        private static int[] CountFaces(IReadOnlyList<DiceFace> boardFaces)
+        /// <param name="boardFaces">세어 볼 판 위 면들.</param>
+        /// <param name="countByFace">결과를 채울 배열. 길이 <see cref="FaceKindCount"/>, 0으로 시작해야 한다.</param>
+        private static void CountFaces(IReadOnlyList<DiceFace> boardFaces, Span<int> countByFace)
         {
-            int[] countByFace = new int[FaceKindCount];
-
             for (int index = 0; index < boardFaces.Count; index++)
             {
                 countByFace[(int)boardFaces[index]]++;
             }
-
-            return countByFace;
         }
     }
 }
