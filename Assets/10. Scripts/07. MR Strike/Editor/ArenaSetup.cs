@@ -53,7 +53,7 @@ namespace StudyXR.Strike.EditorTools
             Debug.Log($"[ArenaSetup] 경기장 추가: {ScenePath}");
         }
 
-        private static PhysicsMaterial LoadOrCreatePhysicsMaterial(string assetName, float dynamicFriction, float staticFriction, float bounciness)
+        public static PhysicsMaterial LoadOrCreatePhysicsMaterial(string assetName, float dynamicFriction, float staticFriction, float bounciness)
         {
             string path = $"{PhysicsMaterialFolder}/{assetName}.asset";
             PhysicsMaterial existing = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(path);
@@ -69,7 +69,7 @@ namespace StudyXR.Strike.EditorTools
             return material;
         }
 
-        private static Material LoadOrCreateMaterial(string assetName, Color color)
+        public static Material LoadOrCreateMaterial(string assetName, Color color)
         {
             string path = $"{MaterialFolder}/{assetName}.mat";
             Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
