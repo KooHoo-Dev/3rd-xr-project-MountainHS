@@ -49,6 +49,9 @@ namespace StudyXR.Strike
         [Tooltip("굴림 시간초과(rollTimeoutSeconds)를 읽을 튜닝 에셋")]
         [SerializeField] private DicePhysicsSettings settings;
 
+        [Tooltip("플레이어 차례에 주사위 집기와 멈춤을 받는 입력")]
+        [SerializeField] private PlayerTurnInput playerInput;
+
         [Header("규칙 (가정)")]
         [Tooltip("시작할 때 모두가 가지는 주사위 개수")]
         [SerializeField] private int startDiceCount = 5;
@@ -77,7 +80,7 @@ namespace StudyXR.Strike
             turnOrder = new TurnOrder(participants);
             LastJudgeResult = default;
             DidPlayerWin = false;
-            State = TurnState.ThrowingDice;
+            BeginChoice(TurnState.ThrowingDice);
         }
 
         /// <summary>
@@ -140,7 +143,7 @@ namespace StudyXR.Strike
                 return;
             }
 
-            State = TurnState.ChoosingContinue;
+            BeginChoice(TurnState.ChoosingContinue);
         }
 
         /// <summary>
@@ -242,7 +245,21 @@ namespace StudyXR.Strike
             }
 
             turnOrder.MoveToNext();
-            State = TurnState.ThrowingDice;
+            BeginChoice(TurnState.ThrowingDice);
+        }
+
+        /// <summary>
+        /// 지금 차례 사람에게 던질 기회를 준다. 던지기 전(ThrowingDice)은 멈출 수 없고, 한 번 던져 못 딴 뒤(ChoosingContinue)에는 멈출 수 있다.
+        /// 플레이어면 입력 클래스가 집기를 열고, 선택은 OnDieThrown / StopTurn으로 돌아온다.
+        /// </summary>
+        /// <param name="choiceState">ThrowingDice 또는 ChoosingContinue</param>
+        private void BeginChoice(TurnState choiceState)
+        {
+            State = choiceState;
+            bool canStop = choiceState == TurnState.ChoosingContinue;
+
+            Participant current = turnOrder.Current;
+            if (current.IsPlayer) playerInput.BeginChoosing(current, canStop);
         }
 
         private void EndGame(bool playerWon)

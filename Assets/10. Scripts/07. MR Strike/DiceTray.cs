@@ -37,6 +37,9 @@ namespace StudyXR.Strike
         // 지금 트레이에 놓인 주사위 수
         public int DiceCount => diceInTray.Count;
 
+        // 지금 트레이에 놓인 주사위들 (읽기 전용). 플레이어 입력이 잡기 이벤트를 걸 때 쓴다.
+        public IReadOnlyList<Dice> DiceInTray => diceInTray;
+
         /// <summary>
         /// 트레이에 정확히 그 개수의 주사위가 놓이도록 모자라면 만들고 남으면 지운다 (풀링 없음).
         /// 이미 놓인 주사위는 건드리지 않는다.
@@ -79,6 +82,15 @@ namespace StudyXR.Strike
             Dice taken = diceInTray[lastIndex];
             diceInTray.RemoveAt(lastIndex);
             return taken;
+        }
+
+        /// <summary>
+        /// 플레이어가 직접 집은 주사위를 트레이 관리에서 뺀다. <see cref="TakeOne"/>과 달리 어느 주사위인지 지정한다.
+        /// </summary>
+        /// <param name="dice">플레이어가 집은 주사위 (이 트레이에 놓여 있어야 한다)</param>
+        public void Take(Dice dice)
+        {
+            diceInTray.Remove(dice);
         }
 
         /// <summary>

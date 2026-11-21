@@ -1,4 +1,3 @@
-using StudyXR.Common;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -44,8 +43,8 @@ namespace StudyXR.Strike
 
         private void OnEnable()
         {
-            throwAction = QuestButtons.Create(QuestButton.B, "Test Turn Throw", "<Keyboard>/f8");
-            stopAction = QuestButtons.Create(QuestButton.RightStickClick, "Test Turn Stop", "<Keyboard>/f9");
+            throwAction = new InputAction("Test Turn Throw", InputActionType.Button, "<Keyboard>/f8");
+            stopAction = new InputAction("Test Turn Stop", InputActionType.Button, "<Keyboard>/f9");
             restartAction = new InputAction("Test Turn Restart", InputActionType.Button, "<Keyboard>/f10");
             autoPlayAction = new InputAction("Test Turn Auto Play", InputActionType.Button, "<Keyboard>/f11");
             throwAction.Enable();
