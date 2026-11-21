@@ -71,6 +71,15 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 평평한 타원 바닥의 한가운데를 돌려준다. AI가 가운데를 겨냥할 때 쓴다.
+        /// </summary>
+        /// <returns>바닥 중심의 월드 위치</returns>
+        public Vector3 FloorCenterPoint()
+        {
+            return transform.TransformPoint(new Vector3(0f, -bowlDepthMeters, 0f));
+        }
+
+        /// <summary>
         /// 평평한 타원 바닥 위의 무작위 점을 돌려준다. 바닥 어디든 같은 확률이다. AI가 빈 곳을 겨냥할 때 쓴다.
         /// </summary>
         /// <returns>바닥 면 위의 월드 위치</returns>

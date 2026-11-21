@@ -5,7 +5,7 @@ namespace StudyXR.Strike
 {
     /// <summary>
     /// 테스트 전용. #5 턴 진행을 시뮬레이터에서 확인하는 키. 플레이어 입력(#6)·AI(#7)가 생기기 전까지 지금 차례 사람 대신 던지고 멈춘다.
-    /// 시작하면 한 판을 시작한다. F8 = 지금 차례 사람이 주사위 던지기, F9 = 멈춤, F10 = 새 판, F11 = 자동 진행 토글.
+    /// 시작하면 한 판을 시작한다. F8 = 플레이어 차례에 대신 던지기 (AI는 스스로 던진다), F9 = 멈춤, F10 = 새 판, F11 = 자동 진행 토글.
     /// </summary>
     public class TestTurnKeys : MonoBehaviour
     {
@@ -38,8 +38,15 @@ namespace StudyXR.Strike
         private bool isAutoPlaying;
         private float autoWaitSeconds;
 
-        private bool IsWaitingForChoice =>
-            turnManager.State == TurnState.ThrowingDice || turnManager.State == TurnState.ChoosingContinue;
+        // 플레이어가 던질지 고르는 차례일 때만 true (AI 차례는 AI가 알아서 던진다)
+        private bool IsWaitingForChoice
+        {
+            get
+            {
+                bool isChoiceState = turnManager.State == TurnState.ThrowingDice || turnManager.State == TurnState.ChoosingContinue;
+                return isChoiceState && turnManager.CurrentParticipant.IsPlayer;
+            }
+        }
 
         private void OnEnable()
         {
@@ -132,6 +139,7 @@ namespace StudyXR.Strike
             body.rotation = Random.rotation;
             body.linearVelocity = velocity;
             body.angularVelocity = Random.onUnitSphere * spinSpeed;
+            dice.SetSelectable(false);
             turnManager.OnDieThrown(dice);
         }
 

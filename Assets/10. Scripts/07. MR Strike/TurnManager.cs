@@ -52,6 +52,9 @@ namespace StudyXR.Strike
         [Tooltip("플레이어 차례에 주사위 집기와 멈춤을 받는 입력")]
         [SerializeField] private PlayerTurnInput playerInput;
 
+        [Tooltip("AI 참가자들. 탁자 1번 자리부터 순서대로 (자리 수 - 1개 이상)")]
+        [SerializeField] private AiPlayer[] aiPlayers;
+
         [Header("규칙 (가정)")]
         [Tooltip("시작할 때 모두가 가지는 주사위 개수")]
         [SerializeField] private int startDiceCount = 5;
@@ -68,6 +71,7 @@ namespace StudyXR.Strike
         public IReadOnlyList<Participant> Participants => participants;
         public Participant CurrentParticipant => turnOrder.Current;
         public int BoardDiceCount => boardDice.Count;
+        public IReadOnlyList<Dice> BoardDice => boardDice;
 
         /// <summary>
         /// 새 판을 시작한다. 판을 비우고 모두에게 시작 개수를 주고 첫 사람(플레이어)의 차례로 간다.
@@ -75,6 +79,7 @@ namespace StudyXR.Strike
         /// </summary>
         public void StartGame()
         {
+            CancelAiTurns();
             ClearBoard();
             CreateParticipants();
             turnOrder = new TurnOrder(participants);
@@ -259,7 +264,23 @@ namespace StudyXR.Strike
             bool canStop = choiceState == TurnState.ChoosingContinue;
 
             Participant current = turnOrder.Current;
-            if (current.IsPlayer) playerInput.BeginChoosing(current, canStop);
+            if (current.IsPlayer)
+            {
+                playerInput.BeginChoosing(current, canStop);
+                return;
+            }
+            current.Ai.BeginChoosing(current, canStop);
+        }
+
+        /// <summary>
+        /// 새 판을 시작할 때 이전 판에서 진행 중이던 AI 차례(코루틴)를 끊는다. 안 끊으면 새 판에서 옛 AI가 던진다.
+        /// </summary>
+        private void CancelAiTurns()
+        {
+            foreach (AiPlayer ai in aiPlayers)
+            {
+                ai.CancelTurn();
+            }
         }
 
         private void EndGame(bool playerWon)
@@ -305,11 +326,12 @@ namespace StudyXR.Strike
             {
                 bool isPlayer = seatIndex == 0;
                 string participantName = isPlayer ? "나" : $"AI {seatIndex}";
+                AiPlayer ai = isPlayer ? null : aiPlayers[seatIndex - 1];
                 DiceTray tray = table.SeatTrays[seatIndex];
 
                 tray.SetSelectable(false);
                 tray.Show(startDiceCount);
-                participants.Add(new Participant(participantName, isPlayer, tray, startDiceCount));
+                participants.Add(new Participant(participantName, ai, tray, startDiceCount));
             }
         }
     }

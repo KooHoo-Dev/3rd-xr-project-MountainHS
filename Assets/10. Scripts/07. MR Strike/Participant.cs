@@ -8,8 +8,10 @@ namespace StudyXR.Strike
     {
         public string Name { get; }
 
-        // true = 내 주사위를 직접 던지는 사람. AI(#7)가 생기면 이 값 대신 AI 연결 여부로 바꾼다.
-        public bool IsPlayer { get; }
+        // 이 사람을 움직이는 AI. null = 플레이어 (내 손으로 직접 던진다).
+        public AiPlayer Ai { get; }
+
+        public bool IsPlayer => Ai == null;
 
         // 이 사람 앞의 트레이. 개수를 바꾼 뒤 Tray.Show(DiceCount)로 맞춘다.
         public DiceTray Tray { get; }
@@ -24,13 +26,13 @@ namespace StudyXR.Strike
         /// 참가자를 만든다. 트레이는 이 시점에 아직 그리지 않는다 (호출자가 Tray.Show로 그린다).
         /// </summary>
         /// <param name="name">화면에 보일 이름</param>
-        /// <param name="isPlayer">true = 직접 던지는 플레이어</param>
+        /// <param name="ai">이 사람을 움직이는 AI. null = 직접 던지는 플레이어</param>
         /// <param name="tray">이 사람 앞의 트레이</param>
         /// <param name="startDiceCount">시작 주사위 개수</param>
-        public Participant(string name, bool isPlayer, DiceTray tray, int startDiceCount)
+        public Participant(string name, AiPlayer ai, DiceTray tray, int startDiceCount)
         {
             Name = name;
-            IsPlayer = isPlayer;
+            Ai = ai;
             Tray = tray;
             DiceCount = startDiceCount;
         }
