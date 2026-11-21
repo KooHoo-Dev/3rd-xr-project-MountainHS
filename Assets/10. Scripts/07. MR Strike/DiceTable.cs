@@ -19,7 +19,49 @@ namespace StudyXR.Strike
         [Tooltip("자리별 트레이. 0번 = 플레이어, 이후 시계 방향")]
         [SerializeField] private DiceTray[] seatTrays;
 
+        [Tooltip("탁자 윗면의 높이 (m, 탁자 원점 기준). 진짜 책상에 놓을 때 이 높이만큼 내려서 윗면을 책상에 맞춘다. 메뉴 3의 TableSurfaceHeight와 같은 값")]
+        [SerializeField] private float tableTopHeightMeters = 0.75f;
+
         public DiceArena Arena => arena;
         public DiceTray[] SeatTrays => seatTrays;
+
+        /// <summary>
+        /// 탁자 윗면이 주어진 점에 오도록 옮기고 돌린다. 트레이 주사위는 옮기기 전에 비우므로, 호출 뒤 새 판(StartGame)이 새 자리에 다시 놓아야 한다.
+        /// MR 책상 배치(TablePlacer)가 부른다.
+        /// </summary>
+        /// <param name="surfacePoint">탁자 윗면 한가운데가 놓일 월드 위치 (진짜 책상 윗면 점)</param>
+        /// <param name="rotation">탁자 회전 (Y 회전만 쓴다. 로컬 -Z쪽이 플레이어 자리)</param>
+        /// <param name="hideFurniture">true = 가상 탁자 겉모습(윗판·기둥·받침)을 숨겨 진짜 책상이 보이게 한다 (충돌은 남는다)</param>
+        public void PlaceOnSurface(Vector3 surfacePoint, Quaternion rotation, bool hideFurniture)
+        {
+            foreach (DiceTray tray in seatTrays)
+            {
+                tray.Show(0);
+            }
+
+            transform.SetPositionAndRotation(surfacePoint - Vector3.up * tableTopHeightMeters, rotation);
+            SetFurnitureVisible(hideFurniture == false);
+        }
+
+        /// <summary>
+        /// 경기장과 트레이를 뺀 나머지 겉모습(윗판·기둥·받침)을 켜거나 끈다.
+        /// </summary>
+        private void SetFurnitureVisible(bool visible)
+        {
+            foreach (Renderer furniture in GetComponentsInChildren<Renderer>())
+            {
+                bool isArenaPart = furniture.transform.IsChildOf(arena.transform);
+                if (isArenaPart) continue;
+
+                bool isTrayPart = false;
+                foreach (DiceTray tray in seatTrays)
+                {
+                    if (furniture.transform.IsChildOf(tray.transform)) isTrayPart = true;
+                }
+                if (isTrayPart) continue;
+
+                furniture.enabled = visible;
+            }
+        }
     }
 }
