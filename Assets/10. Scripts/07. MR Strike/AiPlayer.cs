@@ -17,6 +17,7 @@ namespace StudyXR.Strike
         [SerializeField] private TurnManager turnManager;
         [SerializeField] private DiceArena arena;
         [SerializeField] private AiPersonality personality;
+        [SerializeField] private AiAvatar avatar;
 
         [Header("행동 (가정)")]
         [Tooltip("차례가 오고 나서 던지거나 멈추기까지 생각하는 시간 (초)")]
@@ -29,6 +30,8 @@ namespace StudyXR.Strike
         [SerializeField] private float clusterRadiusMeters = 0.06f;
         [Tooltip("Gentle이 빈 곳을 찾을 때 시험해 보는 후보 점 수")]
         [SerializeField] private int emptySpotCandidateCount = 20;
+        [Tooltip("말풍선을 보여 주는 시간 (초)")]
+        [SerializeField] private float lineSeconds = 2f;
 
         /// <summary>
         /// 차례를 시작한다. 생각한 뒤 멈추거나 던지는 코루틴을 돌린다.
@@ -46,6 +49,35 @@ namespace StudyXR.Strike
         public void CancelTurn()
         {
             StopAllCoroutines();
+            avatar.ResetPose();
+            avatar.ShowExpression(Expression.Neutral);
+        }
+
+        /// <summary>
+        /// 판정 결과에 표정과 대사로 반응한다. TurnManager가 판정 직후 모든 AI에게 알린다.
+        /// 자기 차례였으면 땄는지에 따라 웃거나 아쉬워하고, 남의 차례였으면 상대가 땄을 때만 불안해한다.
+        /// </summary>
+        /// <param name="thrower">방금 던진 사람 (플레이어 또는 AI)</param>
+        /// <param name="result">그 판정 결과 (장외·X·딴 수)</param>
+        public void ReactToJudge(Participant thrower, TurnManager.JudgeResult result)
+        {
+            bool isMyThrow = thrower.Ai == this;
+            bool hasTaken = result.Taken > 0;
+
+            if (isMyThrow && hasTaken)
+            {
+                avatar.ShowExpression(Expression.Happy);
+                avatar.Say(personality.happyLine, lineSeconds);
+                return;
+            }
+            if (isMyThrow)
+            {
+                avatar.ShowExpression(Expression.Disappointed);
+                avatar.Say(personality.disappointedLine, lineSeconds);
+                return;
+            }
+
+            avatar.ShowExpression(hasTaken ? Expression.Worried : Expression.Neutral);
         }
 
         /// <summary>
@@ -119,15 +151,22 @@ namespace StudyXR.Strike
         /// </summary>
         private IEnumerator TakeTurn(Participant self, bool canStop)
         {
+            avatar.ShowExpression(Expression.Thinking);
             yield return new WaitForSeconds(thinkSeconds);
 
             bool wantsToKeepThrowing = ShouldKeepThrowing(ReadBoardFaces(), self.DiceCount);
             bool shouldStop = canStop && wantsToKeepThrowing == false;
             if (shouldStop)
             {
+                avatar.ShowExpression(Expression.Worried);
+                avatar.Say(personality.stopLine, lineSeconds);
                 turnManager.StopTurn();
                 yield break;
             }
+
+            avatar.ShowExpression(Expression.Eager);
+            avatar.Say(personality.windupLine, lineSeconds);
+            yield return avatar.PlayWindup(personality.throwStyle);
 
             // 물리 값은 물리 프레임에 맞춰 넣는다
             yield return new WaitForFixedUpdate();

@@ -133,6 +133,7 @@ namespace StudyXR.Strike
         private void FinishRolling()
         {
             LastJudgeResult = JudgeBoard();
+            NotifyAiReactions(turnOrder.Current, LastJudgeResult);
 
             bool hasTaken = LastJudgeResult.Taken > 0;
             if (hasTaken)
@@ -270,6 +271,19 @@ namespace StudyXR.Strike
                 return;
             }
             current.Ai.BeginChoosing(current, canStop);
+        }
+
+        /// <summary>
+        /// 판정 결과를 모든 AI에게 알려 표정·대사로 반응하게 한다.
+        /// </summary>
+        /// <param name="thrower">방금 던진 사람</param>
+        /// <param name="result">판정 결과</param>
+        private void NotifyAiReactions(Participant thrower, JudgeResult result)
+        {
+            foreach (AiPlayer ai in aiPlayers)
+            {
+                ai.ReactToJudge(thrower, result);
+            }
         }
 
         /// <summary>

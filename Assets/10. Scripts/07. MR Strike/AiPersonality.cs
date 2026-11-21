@@ -40,5 +40,21 @@ namespace StudyXR.Strike
 
         [Tooltip("조준 오차 반지름 (m). 클수록 목표에서 멀리 벗어난다")]
         public float aimErrorRadiusMeters = 0.04f;
+
+        [Header("겉모습·대사 (AiAvatar가 보여 줌)")]
+        [Tooltip("머리 색. 세 AI를 한눈에 구분하는 단서")]
+        public Color headColor = Color.white;
+
+        [Tooltip("던지기 전 예고 동작 때 하는 말")]
+        public string windupLine = "간다!";
+
+        [Tooltip("더 던지지 않고 멈출 때 하는 말")]
+        public string stopLine = "여기까지.";
+
+        [Tooltip("짝을 따서 주사위를 가져갔을 때 하는 말")]
+        public string happyLine = "좋았어!";
+
+        [Tooltip("못 땄을 때 하는 말")]
+        public string disappointedLine = "아쉽네.";
     }
 }
