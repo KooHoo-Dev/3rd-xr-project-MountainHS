@@ -383,11 +383,14 @@ namespace StudyXR.Strike
 
         /// <summary>
         /// 새 판의 경기장에 누구의 것도 아닌 주사위 1개를 무작위 자리에 떨어뜨려 놓는다. 첫 판정부터 판 위 주사위로 센다.
+        /// 윗면은 1~5 중 무작위로 정해 놓는다 (X가 나오면 시작하자마자 지워지므로).
         /// </summary>
         private void PlaceStartingDie()
         {
             Vector3 dropPosition = table.Arena.RandomFloorPoint() + Vector3.up * startingDieDropHeightMeters;
-            Dice startingDie = table.SeatTrays[0].CreateLooseDice(dropPosition, Random.rotation);
+            Dice startingDie = table.SeatTrays[0].CreateLooseDice(dropPosition, Quaternion.identity);
+            DiceFace startingFace = (DiceFace)Random.Range((int)DiceFace.One, (int)DiceFace.X);
+            startingDie.TurnFaceUp(startingFace);
             boardDice.Add(startingDie);
         }
 

@@ -82,6 +82,19 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 고른 면이 위를 향하도록 주사위를 돌린다. 좌우 방향은 무작위.
+        /// 새 판의 시작 주사위를 놓을 때 <see cref="TurnManager"/>가 부른다.
+        /// </summary>
+        /// <param name="face">위로 향할 면</param>
+        public void TurnFaceUp(DiceFace face)
+        {
+            Vector3 faceLocalDirection = faceLabels[(int)face].localPosition.normalized;
+            Quaternion faceToUp = Quaternion.FromToRotation(faceLocalDirection, Vector3.up);
+            Quaternion randomYaw = Quaternion.AngleAxis(Random.Range(0f, 360f), Vector3.up);
+            transform.rotation = randomYaw * faceToUp;
+        }
+
+        /// <summary>
         /// 튜닝 에셋 값을 크기·Rigidbody·Collider·잡기 컴포넌트에 복사한다.
         /// Awake가 처음 한 번, 테스트 키(F6)가 Play 중 값을 바꾼 뒤 다시 부른다.
         /// </summary>
