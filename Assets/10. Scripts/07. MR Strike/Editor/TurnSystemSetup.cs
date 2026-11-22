@@ -1,8 +1,10 @@
 using System;
 using TMPro;
+using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 using Object = UnityEngine.Object;
 
 namespace StudyXR.Strike.EditorTools
@@ -17,6 +19,8 @@ namespace StudyXR.Strike.EditorTools
         private const string SettingsFolder = StudyFolder + "/Settings";
         private const string SettingsPath = SettingsFolder + "/DicePhysicsSettings.asset";
         private const string TurnSystemObjectName = "Turn System";
+        private const string TablePlacerObjectName = "Table Placer";
+        private const string StatusBoardObjectName = "Turn Status Board";
         private const string KoreanFontPath = "Assets/99. External Assets/Font/Noto_Sans_KR/NotoSansKR-Regular SDF.asset";
 
         /// <summary>
@@ -31,12 +35,33 @@ namespace StudyXR.Strike.EditorTools
                 Debug.LogError("[TurnSystemSetup] 열린 씬에 원형 탁자(DiceTable)가 없다. 메뉴 3으로 프리팹을 만들고 씬에 놓은 뒤 다시 실행한다.");
                 return;
             }
-            if (GameObject.Find(TurnSystemObjectName) != null)
+
+            TurnManager turnManager;
+            bool isTurnSystemExisting = GameObject.Find(TurnSystemObjectName) != null;
+            if (isTurnSystemExisting)
             {
-                Debug.Log($"[TurnSystemSetup] '{TurnSystemObjectName}'가 이미 씬에 있어 건너뜀.");
-                return;
+                turnManager = Object.FindFirstObjectByType<TurnManager>();
+                Debug.Log($"[TurnSystemSetup] '{TurnSystemObjectName}'가 이미 씬에 있어 만들기는 건너뛰고 시험 키·책상 배치만 확인한다.");
+            }
+            else
+            {
+                turnManager = CreateTurnSystem(table);
             }
 
+            AddTestKeys(turnManager, table);
+            AddTablePlacer(turnManager, table);
+            AddStatusBoard(turnManager, table);
+            EditorSceneManager.MarkSceneDirty(turnManager.gameObject.scene);
+            Debug.Log("[TurnSystemSetup] 완료. 씬을 저장한다.");
+        }
+
+        /// <summary>
+        /// 성격 에셋을 만들고 Turn System 오브젝트에 TurnManager·PlayerTurnInput·AI들을 붙여 서로 연결한다.
+        /// </summary>
+        /// <param name="table">씬의 원형 탁자</param>
+        /// <returns>새로 만든 TurnManager</returns>
+        private static TurnManager CreateTurnSystem(DiceTable table)
+        {
             AiPersonality[] personalities = CreatePersonalities();
             AssetDatabase.SaveAssets();
 
@@ -48,10 +73,8 @@ namespace StudyXR.Strike.EditorTools
 
             ConnectTurnManager(turnManager, table, settings, playerInput, aiPlayers);
             ConnectPlayerInput(playerInput, turnManager);
-            ConnectTestKeys(turnManager, table);
-
-            EditorSceneManager.MarkSceneDirty(root.scene);
-            Debug.Log($"[TurnSystemSetup] 턴 시스템 추가: AI {aiPlayers.Length}명. 씬을 저장한다.");
+            Debug.Log($"[TurnSystemSetup] 턴 시스템 추가: AI {aiPlayers.Length}명.");
+            return turnManager;
         }
 
         /// <summary>
@@ -223,17 +246,97 @@ namespace StudyXR.Strike.EditorTools
         }
 
         /// <summary>
-        /// 씬에 TestTurnKeys가 있으면 새 TurnManager와 탁자를 연결해 바로 시험할 수 있게 한다.
+        /// 씬에 TestTurnKeys가 없으면 만들고, TurnManager와 탁자를 연결해 Play하면 바로 한 판이 시작되게 한다 (시험 전용).
         /// </summary>
-        private static void ConnectTestKeys(TurnManager turnManager, DiceTable table)
+        private static void AddTestKeys(TurnManager turnManager, DiceTable table)
         {
             TestTurnKeys testKeys = Object.FindFirstObjectByType<TestTurnKeys>();
-            if (testKeys == null) return;
+            if (testKeys == null)
+            {
+                testKeys = new GameObject("TestTurnKeys").AddComponent<TestTurnKeys>();
+            }
 
             SerializedObject serializedKeys = new SerializedObject(testKeys);
             serializedKeys.FindProperty("turnManager").objectReferenceValue = turnManager;
             serializedKeys.FindProperty("table").objectReferenceValue = table;
             serializedKeys.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// 경기장 위에 차례·할 일·주사위 개수를 띄우는 안내판(TurnStatusBoard)을 없으면 만들고 연결한다.
+        /// 글자는 안내판 오브젝트 앞(+Z)을 향해 읽히므로, 안내판이 머리를 바라보면 그대로 읽힌다.
+        /// </summary>
+        private static void AddStatusBoard(TurnManager turnManager, DiceTable table)
+        {
+            XROrigin origin = Object.FindFirstObjectByType<XROrigin>();
+            if (origin == null)
+            {
+                Debug.LogWarning("[TurnSystemSetup] XR Origin이 없어 안내판(TurnStatusBoard)은 만들지 않았다.");
+                return;
+            }
+
+            TurnStatusBoard board = Object.FindFirstObjectByType<TurnStatusBoard>();
+            if (board == null)
+            {
+                GameObject boardObject = new GameObject(StatusBoardObjectName);
+                TMP_Text guideText = CreateText("Guide Text", boardObject.transform, Vector3.zero, 0.4f, 0.3f);
+                guideText.transform.localRotation = Quaternion.identity;
+                guideText.rectTransform.sizeDelta = new Vector2(1.2f, 0.3f);
+                board = boardObject.AddComponent<TurnStatusBoard>();
+
+                SerializedObject serializedText = new SerializedObject(board);
+                serializedText.FindProperty("guideText").objectReferenceValue = guideText;
+                serializedText.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SerializedObject serializedBoard = new SerializedObject(board);
+            serializedBoard.FindProperty("turnManager").objectReferenceValue = turnManager;
+            serializedBoard.FindProperty("table").objectReferenceValue = table;
+            serializedBoard.FindProperty("head").objectReferenceValue = origin.Camera.transform;
+            serializedBoard.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// 씬에 TablePlacer·TableFinder가 없으면 "Table Placer" 오브젝트에 만들고 연결한다.
+        /// 머리는 XR Origin의 카메라, 면 레이캐스트는 씬의 ARRaycastManager를 쓴다 (없으면 연결하지 않아 허공 배치만 된다).
+        /// </summary>
+        private static void AddTablePlacer(TurnManager turnManager, DiceTable table)
+        {
+            XROrigin origin = Object.FindFirstObjectByType<XROrigin>();
+            if (origin == null)
+            {
+                Debug.LogWarning("[TurnSystemSetup] XR Origin이 없어 책상 배치(TablePlacer)는 만들지 않았다.");
+                return;
+            }
+
+            TablePlacer placer = Object.FindFirstObjectByType<TablePlacer>();
+            TableFinder finder = Object.FindFirstObjectByType<TableFinder>();
+            if (placer == null || finder == null)
+            {
+                GameObject placerObject = GameObject.Find(TablePlacerObjectName);
+                if (placerObject == null) placerObject = new GameObject(TablePlacerObjectName);
+                if (placer == null) placer = placerObject.AddComponent<TablePlacer>();
+                if (finder == null) finder = placerObject.AddComponent<TableFinder>();
+            }
+
+            Transform head = origin.Camera.transform;
+            ARRaycastManager raycastManager = Object.FindFirstObjectByType<ARRaycastManager>();
+            if (raycastManager == null)
+            {
+                Debug.LogWarning("[TurnSystemSetup] 씬에 ARRaycastManager가 없다. TableFinder는 허공 배치만 한다 (진짜 책상을 쓰려면 XR Origin에 AR 컴포넌트를 둔다).");
+            }
+
+            SerializedObject serializedFinder = new SerializedObject(finder);
+            serializedFinder.FindProperty("raycastManager").objectReferenceValue = raycastManager;
+            serializedFinder.FindProperty("head").objectReferenceValue = head;
+            serializedFinder.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedPlacer = new SerializedObject(placer);
+            serializedPlacer.FindProperty("tableFinder").objectReferenceValue = finder;
+            serializedPlacer.FindProperty("table").objectReferenceValue = table;
+            serializedPlacer.FindProperty("turnManager").objectReferenceValue = turnManager;
+            serializedPlacer.FindProperty("head").objectReferenceValue = head;
+            serializedPlacer.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static AiPersonality LoadOrCreatePersonality(string assetName, Action<AiPersonality> configure)

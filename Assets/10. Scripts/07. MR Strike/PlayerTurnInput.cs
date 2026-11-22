@@ -53,6 +53,9 @@ namespace StudyXR.Strike
         private Participant choosingPlayer;
         private DiceTray choosingTray;
 
+        // 지금 손에 쥐고 있는 주사위. 새 판이 시작될 때 손에 남지 않게 치우려고 기억한다
+        private Dice heldDice;
+
         // B 버튼을 계속 누르고 있는 시간 (초). 떼면 0
         private float stopHeldSeconds;
 
@@ -113,6 +116,24 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 새 판을 시작할 때 고르던 차례를 끊는다. 잡기·놓기 구독을 풀고, 손에 쥔 주사위가 있으면 지운다.
+        /// <see cref="TurnManager.StartGame"/>이 트레이를 새로 채우기 전에 부른다.
+        /// </summary>
+        public void ResetForNewGame()
+        {
+            UnwatchAllDice();
+            isChoosing = false;
+            canStop = false;
+            stopHeldSeconds = 0f;
+
+            if (heldDice != null)
+            {
+                Destroy(heldDice.gameObject);
+                heldDice = null;
+            }
+        }
+
+        /// <summary>
         /// B를 누르고 있는 시간을 재고, 멈출 수 있는 때 기준 시간을 넘기면 차례를 마친다.
         /// </summary>
         private void UpdateStopHold()
@@ -163,6 +184,7 @@ namespace StudyXR.Strike
         private void OnGrabbed(SelectEnterEventArgs args)
         {
             Dice grabbedDice = args.interactableObject.transform.GetComponent<Dice>();
+            heldDice = grabbedDice;
             choosingTray.Take(grabbedDice);
             choosingTray.SetSelectable(false);
         }
@@ -177,6 +199,7 @@ namespace StudyXR.Strike
         private void OnReleased(SelectExitEventArgs args)
         {
             Dice releasedDice = args.interactableObject.transform.GetComponent<Dice>();
+            heldDice = null;
             float releaseSpeed = releasedDice.GetComponent<Rigidbody>().linearVelocity.magnitude;
             bool isDropped = releaseSpeed < dropSpeedMetersPerSecond;
             StopChoosing();
@@ -202,8 +225,14 @@ namespace StudyXR.Strike
             BeginChoosing(choosingPlayer, canStop);
         }
 
-        private void StopChoosing()
+        /// <summary>
+        /// 플레이어 차례의 고르기를 닫는다. 구독을 풀고 트레이를 다시 못 잡게 한다. 이미 닫혀 있으면 아무것도 하지 않는다.
+        /// 손으로 던진 경우는 스스로 부르고, 시험 키 등 다른 경로로 던졌을 때는 <see cref="TurnManager.OnDieThrown"/>이 부른다.
+        /// </summary>
+        public void StopChoosing()
         {
+            if (isChoosing == false) return;
+
             isChoosing = false;
             UnwatchAllDice();
             choosingTray.SetSelectable(false);

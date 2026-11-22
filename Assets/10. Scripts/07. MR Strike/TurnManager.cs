@@ -75,11 +75,12 @@ namespace StudyXR.Strike
 
         /// <summary>
         /// 새 판을 시작한다. 판을 비우고 모두에게 시작 개수를 주고 첫 사람(플레이어)의 차례로 간다.
-        /// 시작·재시작 버튼이 부른다.
+        /// 시작·재시작 버튼이 부른다. 진행 중이던 AI 차례와 플레이어가 손에 든 주사위도 함께 정리한다.
         /// </summary>
         public void StartGame()
         {
             CancelAiTurns();
+            playerInput.ResetForNewGame();
             ClearBoard();
             CreateParticipants();
             turnOrder = new TurnOrder(participants);
@@ -95,6 +96,8 @@ namespace StudyXR.Strike
         /// <param name="dice">방금 던진 주사위 (이미 트레이에서 떼어 낸 것)</param>
         public void OnDieThrown(Dice dice)
         {
+            // 어느 경로로 던졌든 플레이어의 고르기는 닫는다 (안 닫으면 굴리는 동안·AI 차례에도 트레이를 잡을 수 있다)
+            playerInput.StopChoosing();
             turnOrder.Current.DiceCount--;
             boardDice.Add(dice);
             rollElapsedSeconds = 0f;
@@ -332,6 +335,7 @@ namespace StudyXR.Strike
 
         /// <summary>
         /// 탁자 자리 순서대로 참가자를 만든다 (0번 = 플레이어). 트레이에는 시작 개수를 보여 주고 집기는 막아 둔다.
+        /// 트레이는 한 번 비운 뒤 다시 채워, 이전 판에 밀리거나 떨어진 주사위 없이 모두 제자리에서 시작한다.
         /// </summary>
         private void CreateParticipants()
         {
@@ -344,6 +348,7 @@ namespace StudyXR.Strike
                 DiceTray tray = table.SeatTrays[seatIndex];
 
                 tray.SetSelectable(false);
+                tray.Show(0);
                 tray.Show(startDiceCount);
                 participants.Add(new Participant(participantName, ai, tray, startDiceCount));
             }

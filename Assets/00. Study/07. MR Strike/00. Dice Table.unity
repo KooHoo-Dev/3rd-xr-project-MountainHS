@@ -2405,7 +2405,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &868823962
 Transform:
   m_ObjectHideFlags: 0
@@ -3191,6 +3191,58 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1121183373}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1153372114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1153372116}
+  - component: {fileID: 1153372115}
+  m_Layer: 0
+  m_Name: TestTurnKeys
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1153372115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153372114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50f1d76d56211d46bb96f083d1d0d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.TestTurnKeys
+  turnManager: {fileID: 1054863981}
+  table: {fileID: 27825449}
+  throwStartHeightMeters: 0.1
+  flightSeconds: 0.5
+  aimScatterMeters: 0.12
+  spinSpeed: 15
+  autoDelaySeconds: 0.5
+  autoStopChance: 0.4
+--- !u!4 &1153372116
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153372114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1161234210
 GameObject:
   m_ObjectHideFlags: 0
@@ -4985,3 +5037,4 @@ SceneRoots:
   - {fileID: 1054863982}
   - {fileID: 15378567}
   - {fileID: 1854569484}
+  - {fileID: 1153372116}
