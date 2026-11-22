@@ -11,7 +11,7 @@ namespace StudyXR.Strike.EditorTools
 {
     /// <summary>
     /// 에디터 메뉴 한 번으로 열린 씬의 XR Origin에 조작 UX(#10)를 적용한다.
-    /// 왼 스틱 = 연속 이동, 오른 스틱 = 부드러운 회전으로 바꾸고, 경기장 거리 제한(<see cref="ArenaBoundary"/>)을 붙여 연결한다.
+    /// 왼 스틱 = 연속 이동, 오른 스틱 = 스냅 턴으로 바꾸고, 경기장 거리 제한(<see cref="ArenaBoundary"/>)을 붙여 연결한다.
     /// 플레이어 입력에 양손 진동을 연결하고, 다시 시작 메뉴(<see cref="GameMenu"/>)와 판 위 결과 숫자(<see cref="BoardResultLabels"/>)를 만든다.
     /// </summary>
     /// <remarks>
@@ -47,11 +47,12 @@ namespace StudyXR.Strike.EditorTools
             CreateBoardResultLabels(origin, turnManager);
 
             EditorSceneManager.MarkSceneDirty(origin.gameObject.scene);
-            Debug.Log("[ControlSetup] 조작 UX 적용: 왼 스틱 이동, 오른 스틱 부드러운 회전, 경기장 거리 제한, 진동, 메뉴, 결과 숫자. 씬을 저장한다.");
+            Debug.Log("[ControlSetup] 조작 UX 적용: 왼 스틱 이동, 오른 스틱 스냅 턴, 경기장 거리 제한, 진동, 메뉴, 결과 숫자. 씬을 저장한다.");
         }
 
         /// <summary>
-        /// 왼손 매니저는 연속 이동을 켜고(텔레포트 대신), 오른손 매니저는 연속 이동을 끄고 부드러운 회전을 켠다.
+        /// 왼손 매니저는 연속 이동을 켜고(텔레포트 대신), 오른손 매니저는 연속 이동을 끄고 스냅 턴(일정 각도씩 끊어 회전)으로 둔다.
+        /// 부드러운 회전은 멀미가 나서 스냅 턴을 기본으로 한다. 부드러운 회전을 쓰려면 Right Controller의 `Smooth Turn Enabled`를 켠다.
         /// </summary>
         private static void SetStickModes(XROrigin origin)
         {
@@ -61,7 +62,7 @@ namespace StudyXR.Strike.EditorTools
                 bool isLeftHand = manager.gameObject.name.Contains("Left");
                 SerializedObject serializedManager = new SerializedObject(manager);
                 serializedManager.FindProperty("m_SmoothMotionEnabled").boolValue = isLeftHand;
-                serializedManager.FindProperty("m_SmoothTurnEnabled").boolValue = isLeftHand == false;
+                serializedManager.FindProperty("m_SmoothTurnEnabled").boolValue = false;
                 serializedManager.ApplyModifiedProperties();
             }
         }
