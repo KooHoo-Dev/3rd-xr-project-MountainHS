@@ -107,7 +107,7 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 막 손을 떠난 주사위를 판에 올린다. 던진 사람의 개수가 1 줄어든다.
+        /// 막 손을 떠난 주사위를 판에 올리고 던지는 소리를 낸다. 던진 사람의 개수가 1 줄어든다.
         /// 전부 던져야 하는 차례(판이 빈 채 시작)에서 아직 남았으면 굴림을 기다리지 않고 바로 다음 주사위를 던지게 한다.
         /// 플레이어 입력(#6)과 AI(#7)가 던진 직후에 부른다.
         /// </summary>
@@ -118,6 +118,7 @@ namespace StudyXR.Strike
             playerInput.StopChoosing();
             turnOrder.Current.DiceCount--;
             dice.ResetRestTimer();
+            dice.GetComponent<DiceSound>().PlayThrow();
             boardDice.Add(dice);
             rollElapsedSeconds = 0f;
 
@@ -239,7 +240,7 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 같은 숫자가 2개 이상인 주사위를 판에서 지우고 그 수만큼 지금 차례 사람의 개수를 늘려 트레이에 보여 준다.
+        /// 같은 숫자가 2개 이상인 주사위를 판에서 지우고 그 수만큼 지금 차례 사람의 개수를 늘려 트레이에 보여 준다. 가져가면 "띵" 소리를 낸다.
         /// </summary>
         /// <returns>가져간 수</returns>
         private int TakePairedDice()
@@ -260,6 +261,8 @@ namespace StudyXR.Strike
                 RemoveBoardDiceAt(index);
                 takenCount++;
             }
+
+            if (takenCount > 0) DiceSound.PlayMatchChime(table.Arena.transform.position);
 
             Participant current = turnOrder.Current;
             current.DiceCount += takenCount;
