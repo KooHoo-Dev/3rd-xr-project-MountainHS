@@ -59,11 +59,17 @@ namespace StudyXR.Strike
         [Tooltip("시작할 때 모두가 가지는 주사위 개수")]
         [SerializeField] private int startDiceCount = 5;
 
+        [Tooltip("판 시작 때 경기장에 놓는 주사위를 바닥 위 몇 m에서 떨어뜨릴지 (m)")]
+        [SerializeField] private float startingDieDropHeightMeters = 0.05f;
+
         // ── 한 판의 상태 ──
         private readonly List<Participant> participants = new List<Participant>();
         private readonly List<Dice> boardDice = new List<Dice>();
         private TurnOrder turnOrder;
         private float rollElapsedSeconds;
+
+        // 이번 차례에 더 던져야 하는 수. 차례를 시작할 때 판이 비어 있으면 손에 든 개수 전부, 아니면 0
+        private int forcedThrowsRemaining;
 
         public TurnState State { get; private set; } = TurnState.GameEnd;
         public JudgeResult LastJudgeResult { get; private set; }
@@ -72,9 +78,10 @@ namespace StudyXR.Strike
         public Participant CurrentParticipant => turnOrder.Current;
         public int BoardDiceCount => boardDice.Count;
         public IReadOnlyList<Dice> BoardDice => boardDice;
+        public int ForcedThrowsRemaining => forcedThrowsRemaining;
 
         /// <summary>
-        /// 새 판을 시작한다. 판을 비우고 모두에게 시작 개수를 주고 첫 사람(플레이어)의 차례로 간다.
+        /// 새 판을 시작한다. 판을 비우고 주사위 1개를 놓고, 모두에게 시작 개수를 주고 첫 사람(플레이어)의 차례로 간다.
         /// 시작·재시작 버튼이 부른다. 진행 중이던 AI 차례와 플레이어가 손에 든 주사위도 함께 정리한다.
         /// </summary>
         public void StartGame()
@@ -83,14 +90,16 @@ namespace StudyXR.Strike
             playerInput.ResetForNewGame();
             ClearBoard();
             CreateParticipants();
+            PlaceStartingDie();
             turnOrder = new TurnOrder(participants);
             LastJudgeResult = default;
             DidPlayerWin = false;
-            BeginChoice(TurnState.ThrowingDice);
+            BeginTurn();
         }
 
         /// <summary>
-        /// 막 손을 떠난 주사위를 판에 올리고 굴림을 기다린다. 던진 사람의 개수가 1 줄어든다.
+        /// 막 손을 떠난 주사위를 판에 올린다. 던진 사람의 개수가 1 줄어든다.
+        /// 전부 던져야 하는 차례(판이 빈 채 시작)에서 아직 남았으면 굴림을 기다리지 않고 바로 다음 주사위를 던지게 한다.
         /// 플레이어 입력(#6)과 AI(#7)가 던진 직후에 부른다.
         /// </summary>
         /// <param name="dice">방금 던진 주사위 (이미 트레이에서 떼어 낸 것)</param>
@@ -99,8 +108,17 @@ namespace StudyXR.Strike
             // 어느 경로로 던졌든 플레이어의 고르기는 닫는다 (안 닫으면 굴리는 동안·AI 차례에도 트레이를 잡을 수 있다)
             playerInput.StopChoosing();
             turnOrder.Current.DiceCount--;
+            dice.ResetRestTimer();
             boardDice.Add(dice);
             rollElapsedSeconds = 0f;
+
+            if (forcedThrowsRemaining > 0) forcedThrowsRemaining--;
+            bool hasForcedThrowsLeft = forcedThrowsRemaining > 0;
+            if (hasForcedThrowsLeft)
+            {
+                BeginChoice(TurnState.ThrowingDice);
+                return;
+            }
             State = TurnState.Rolling;
         }
 
@@ -254,6 +272,16 @@ namespace StudyXR.Strike
             }
 
             turnOrder.MoveToNext();
+            BeginTurn();
+        }
+
+        /// <summary>
+        /// 새 차례를 연다. 판이 비어 있으면 이 사람은 손에 든 주사위를 전부 던져야 한다 (판을 비운 사람이 아니라 그 다음 사람).
+        /// </summary>
+        private void BeginTurn()
+        {
+            bool isBoardEmpty = boardDice.Count == 0;
+            forcedThrowsRemaining = isBoardEmpty ? turnOrder.Current.DiceCount : 0;
             BeginChoice(TurnState.ThrowingDice);
         }
 
@@ -331,6 +359,16 @@ namespace StudyXR.Strike
                 Destroy(dice.gameObject);
             }
             boardDice.Clear();
+        }
+
+        /// <summary>
+        /// 새 판의 경기장에 누구의 것도 아닌 주사위 1개를 무작위 자리에 떨어뜨려 놓는다. 첫 판정부터 판 위 주사위로 센다.
+        /// </summary>
+        private void PlaceStartingDie()
+        {
+            Vector3 dropPosition = table.Arena.RandomFloorPoint() + Vector3.up * startingDieDropHeightMeters;
+            Dice startingDie = table.SeatTrays[0].CreateLooseDice(dropPosition, Random.rotation);
+            boardDice.Add(startingDie);
         }
 
         /// <summary>

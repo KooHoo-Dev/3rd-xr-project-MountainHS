@@ -42,11 +42,30 @@ namespace StudyXR.Strike
         private Vector3 restHandPosition;
         private Coroutine bubbleRoutine;
 
+        // 아바타가 늘 바라볼 플레이어 머리 (Main Camera)
+        private Transform head;
+
         private void Awake()
         {
             restHandPosition = hand.localPosition;
             bubbleText.text = "";
             ShowExpression(Expression.Neutral);
+        }
+
+        private void Start()
+        {
+            head = Camera.main.transform;
+        }
+
+        /// <summary>
+        /// 플레이어 머리 쪽으로 몸(좌우 방향만)을 돌린다. 얼굴·말풍선 글자는 아바타 앞쪽에서만 읽히므로,
+        /// 탁자 옆이나 비스듬한 자리의 AI도 플레이어가 어디 서 있든 글자가 보이게 한다.
+        /// </summary>
+        private void LateUpdate()
+        {
+            Vector3 towardHead = head.position - transform.position;
+            towardHead.y = 0f;
+            transform.rotation = Quaternion.LookRotation(towardHead, Vector3.up);
         }
 
         /// <summary>

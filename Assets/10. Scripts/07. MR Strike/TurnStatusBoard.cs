@@ -62,9 +62,16 @@ namespace StudyXR.Strike
             Participant current = turnManager.CurrentParticipant;
             if (turnManager.State == TurnState.Rolling) return $"{current.Name} 주사위 굴러가는 중...";
 
+            int forcedThrows = turnManager.ForcedThrowsRemaining;
+            bool mustThrowAll = forcedThrows > 0;
             if (current.IsPlayer == false)
             {
+                if (mustThrowAll) return $"{current.Name} 차례 (판이 비어 {forcedThrows}개 전부 던짐)";
                 return $"{current.Name} 차례";
+            }
+            if (mustThrowAll)
+            {
+                return $"판이 비었어요! 주사위 {forcedThrows}개를 전부 던지세요";
             }
             if (turnManager.State == TurnState.ThrowingDice)
             {

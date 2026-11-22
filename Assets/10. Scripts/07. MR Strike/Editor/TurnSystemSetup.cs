@@ -87,9 +87,9 @@ namespace StudyXR.Strike.EditorTools
                 personality.throwStyle = ThrowStyle.Smash;
                 personality.minMatchChanceToContinue = 0f;
                 personality.minDiceToKeepThrowing = 1;
-                personality.launchAngleDegrees = 15f;
-                personality.throwSpeedScale = 1.4f;
-                personality.aimErrorRadiusMeters = 0.08f;
+                personality.launchAngleDegrees = 30f;
+                personality.throwSpeedScale = 1.1f;
+                personality.aimErrorRadiusMeters = 0.06f;
                 personality.headColor = new Color(0.9f, 0.25f, 0.2f);
                 personality.windupLine = "다 부숴 주마!";
                 personality.stopLine = "쳇, 멈춰?";
@@ -115,8 +115,8 @@ namespace StudyXR.Strike.EditorTools
                 personality.throwStyle = ThrowStyle.Center;
                 personality.minMatchChanceToContinue = 0.4f;
                 personality.minDiceToKeepThrowing = 2;
-                personality.launchAngleDegrees = 40f;
-                personality.throwSpeedScale = 1.15f;
+                personality.launchAngleDegrees = 45f;
+                personality.throwSpeedScale = 1.1f;
                 personality.aimErrorRadiusMeters = 0.04f;
                 personality.headColor = new Color(0.95f, 0.8f, 0.2f);
                 personality.windupLine = "운을 걸어 볼까!";

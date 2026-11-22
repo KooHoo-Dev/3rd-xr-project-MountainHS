@@ -96,6 +96,15 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 정지 시간을 0으로 되돌린다. 던진 직후 <see cref="TurnManager.OnDieThrown"/>이 부른다.
+        /// 트레이에서 오래 쉬던 주사위는 정지 시간이 이미 길어서, 안 되돌리면 던지자마자 "멈췄다"로 읽혀 허공에서 바로 판정(장외로 지워짐)된다.
+        /// </summary>
+        public void ResetRestTimer()
+        {
+            slowSeconds = 0f;
+        }
+
+        /// <summary>
         /// 이번 차례에 집을 수 있는 주사위인지 정한다. 강조 색과 잡기 허용을 함께 바꾼다.
         /// </summary>
         /// <param name="selectable">true = 강조 색 + 잡기 허용, false = 기본 색 + 잡기 막음</param>

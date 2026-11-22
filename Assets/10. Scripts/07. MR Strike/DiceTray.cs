@@ -94,6 +94,20 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 트레이 관리에 넣지 않는 주사위를 이 트레이의 프리팹으로 만든다. 판에 처음 놓는 주사위처럼 손에 든 개수에 속하지 않는 것에 쓴다.
+        /// 집기는 막은 채로 만든다.
+        /// </summary>
+        /// <param name="position">만들 월드 위치</param>
+        /// <param name="rotation">만들 월드 회전</param>
+        /// <returns>새 주사위. 지우는 일은 호출자 몫이다</returns>
+        public Dice CreateLooseDice(Vector3 position, Quaternion rotation)
+        {
+            Dice dice = Instantiate(dicePrefab, position, rotation);
+            dice.SetSelectable(false);
+            return dice;
+        }
+
+        /// <summary>
         /// 다음 빈 자리 위에 주사위를 새로 만든다.
         /// </summary>
         private void AddDice()

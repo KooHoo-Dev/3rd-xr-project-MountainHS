@@ -33,7 +33,7 @@ namespace StudyXR.Strike
 
         [Header("떨어뜨림 (가정)")]
         [Tooltip("놓을 때 주사위 속도가 이보다 느리면 던지기가 아니라 떨어뜨림으로 보고 트레이로 되돌린다 (m/s)")]
-        [SerializeField] private float dropSpeedMetersPerSecond = 0.5f;
+        [SerializeField] private float dropSpeedMetersPerSecond = 0.3f;
 
         [Header("진동 (가정)")]
         [Tooltip("내 차례 시작 알림 진동 세기 (0~1)")]

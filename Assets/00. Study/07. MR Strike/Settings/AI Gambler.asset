@@ -15,8 +15,8 @@ MonoBehaviour:
   minMatchChanceToContinue: 0.4
   minDiceToKeepThrowing: 2
   throwStyle: 2
-  launchAngleDegrees: 40
-  throwSpeedScale: 1.15
+  launchAngleDegrees: 45
+  throwSpeedScale: 1.1
   aimErrorRadiusMeters: 0.04
   headColor: {r: 0.95, g: 0.8, b: 0.2, a: 1}
   windupLine: "\uC6B4\uC744 \uAC78\uC5B4 \uBCFC\uAE4C!"
