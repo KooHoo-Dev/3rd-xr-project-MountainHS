@@ -5,7 +5,7 @@ namespace StudyXR.Strike
 {
     /// <summary>
     /// 테스트 전용. #5 턴 진행을 시뮬레이터에서 확인하는 키. 플레이어 입력(#6)·AI(#7)가 생기기 전까지 지금 차례 사람 대신 던지고 멈춘다.
-    /// 시작하면 한 판을 시작한다. F8 = 플레이어 차례에 대신 던지기 (AI는 스스로 던진다), F9 = 멈춤, F10 = 새 판, F11 = 자동 진행 토글.
+    /// 한 판은 TurnManager가 씬 시작 때 스스로 시작한다. F8 = 플레이어 차례에 대신 던지기 (AI는 스스로 던진다), F9 = 멈춤, F10 = 새 판, F11 = 자동 진행 토글.
     /// </summary>
     public class TestTurnKeys : MonoBehaviour
     {
@@ -66,11 +66,6 @@ namespace StudyXR.Strike
             stopAction.Dispose();
             restartAction.Dispose();
             autoPlayAction.Dispose();
-        }
-
-        private void Start()
-        {
-            turnManager.StartGame();
         }
 
         private void Update()
