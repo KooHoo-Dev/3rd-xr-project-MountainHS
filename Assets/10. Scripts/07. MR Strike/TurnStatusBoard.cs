@@ -61,6 +61,7 @@ namespace StudyXR.Strike
 
             Participant current = turnManager.CurrentParticipant;
             if (turnManager.State == TurnState.Rolling) return $"{current.Name} 주사위 굴러가는 중...";
+            if (turnManager.State == TurnState.WaitingBoardRest) return "주사위가 멈추길 기다리는 중...";
 
             int forcedThrows = turnManager.ForcedThrowsRemaining;
             bool mustThrowAll = forcedThrows > 0;

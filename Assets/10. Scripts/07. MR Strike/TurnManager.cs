@@ -4,13 +4,14 @@ using UnityEngine;
 namespace StudyXR.Strike
 {
     /// <summary>
-    /// 한 판의 흐름 단계. 차례마다 ThrowingDice → Rolling → (ChoosingContinue → Rolling)... → 차례 끝으로 돌고, 승패가 나면 GameEnd.
+    /// 한 판의 흐름 단계. 차례마다 ThrowingDice → Rolling → (ChoosingContinue → Rolling)... → WaitingBoardRest → 차례 끝으로 돌고, 승패가 나면 GameEnd.
     /// </summary>
     public enum TurnState
     {
         ThrowingDice,
         Rolling,
         ChoosingContinue,
+        WaitingBoardRest,
         GameEnd,
     }
 
@@ -62,11 +63,15 @@ namespace StudyXR.Strike
         [Tooltip("판 시작 때 경기장에 놓는 주사위를 바닥 위 몇 m에서 떨어뜨릴지 (m)")]
         [SerializeField] private float startingDieDropHeightMeters = 0.05f;
 
+        [Tooltip("판정 뒤 차례를 넘기기 전에 기다리는 시간. 이 뒤에도 구르는 주사위가 있으면 모두 멈출 때까지 더 기다린다 (초)")]
+        [SerializeField] private float passWaitSeconds = 0.5f;
+
         // ── 한 판의 상태 ──
         private readonly List<Participant> participants = new List<Participant>();
         private readonly List<Dice> boardDice = new List<Dice>();
         private TurnOrder turnOrder;
         private float rollElapsedSeconds;
+        private float passWaitElapsedSeconds;
 
         // 이번 차례에 더 던져야 하는 수. 차례를 시작할 때 판이 비어 있으면 손에 든 개수 전부, 아니면 0
         private int forcedThrowsRemaining;
@@ -143,12 +148,19 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 굴리는 중이면 판 위 주사위가 모두 멈췄거나 시간이 다 됐을 때 판정으로 넘어간다.
+        /// 굴리는 중이면 판정 시점을, 차례를 넘기려고 기다리는 중이면 넘길 시점을 확인한다.
         /// </summary>
         private void Update()
         {
-            if (State != TurnState.Rolling) return;
+            if (State == TurnState.Rolling) UpdateRolling();
+            if (State == TurnState.WaitingBoardRest) UpdateWaitingBoardRest();
+        }
 
+        /// <summary>
+        /// 판 위 주사위가 모두 멈췄거나 시간이 다 됐을 때 판정으로 넘어간다.
+        /// </summary>
+        private void UpdateRolling()
+        {
             rollElapsedSeconds += Time.deltaTime;
             bool areAllDiceResting = AreAllBoardDiceResting();
             bool isRollTimedOut = rollElapsedSeconds >= settings.rollTimeoutSeconds;
@@ -158,8 +170,32 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
+        /// 판정 뒤 <see cref="passWaitSeconds"/>를 기다리고, 그때도 구르는 주사위(따고 남은 것 포함)가 있으면 모두 멈출 때까지 기다렸다가 차례를 넘긴다.
+        /// 안 기다리면 앞 사람 주사위가 구르는 중에 다음 사람이 던지고, 멈춘 면이 바뀌어 판정이 어긋난다.
+        /// </summary>
+        private void UpdateWaitingBoardRest()
+        {
+            passWaitElapsedSeconds += Time.deltaTime;
+            bool isWaitOver = passWaitElapsedSeconds >= passWaitSeconds;
+            if (isWaitOver == false) return;
+            if (AreAllBoardDiceResting() == false) return;
+
+            EndTurn();
+        }
+
+        /// <summary>
+        /// 판정으로 차례가 끝날 때 바로 넘기지 않고 판 위 주사위가 멈추기를 기다리는 상태로 간다.
+        /// </summary>
+        private void BeginWaitingBoardRest()
+        {
+            passWaitElapsedSeconds = 0f;
+            State = TurnState.WaitingBoardRest;
+        }
+
+        /// <summary>
         /// 판정하고 결과에 따라 차례를 끝내거나 계속할지 고르는 상태로 간다.
         /// 땄으면 끝, 판이 비었으면(X·장외로 전부 사라진 스트라이크 포함) 끝, 남은 개수가 0이면 끝, 아니면 고른다.
+        /// 끝날 때는 판 위 주사위가 멈추기를 기다린 뒤 넘긴다 (<see cref="UpdateWaitingBoardRest"/>).
         /// 판이 비어 끝나면 다음 사람의 <see cref="BeginTurn"/>이 빈 판을 보고 전부 던지게 한다.
         /// </summary>
         private void FinishRolling()
@@ -170,21 +206,21 @@ namespace StudyXR.Strike
             bool hasTaken = LastJudgeResult.Taken > 0;
             if (hasTaken)
             {
-                EndTurn();
+                BeginWaitingBoardRest();
                 return;
             }
 
             bool isBoardEmpty = boardDice.Count == 0;
             if (isBoardEmpty)
             {
-                EndTurn();
+                BeginWaitingBoardRest();
                 return;
             }
 
             bool hasNoDiceLeft = turnOrder.Current.DiceCount == 0;
             if (hasNoDiceLeft)
             {
-                EndTurn();
+                BeginWaitingBoardRest();
                 return;
             }
 
