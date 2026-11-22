@@ -39,6 +39,35 @@ namespace StudyXR.Strike.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>
+        /// 이미 있는 Dice 프리팹에 3D 소리용 AudioSource와 <see cref="DiceSound"/>를 붙인다. 이미 붙어 있으면 건너뛴다.
+        /// 턴 진행이 던질 때 DiceSound를 찾으므로, 이 메뉴를 실행하기 전에는 던질 때 오류가 난다.
+        /// </summary>
+        [MenuItem("StudyXR/MR Strike/8. 주사위 소리 추가")]
+        public static void AddDiceSound()
+        {
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(DicePrefabPath);
+            if (prefabRoot.GetComponent<DiceSound>() != null)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+                Debug.Log("[DiceTableSetup] 이미 주사위 소리가 있어 건너뜀");
+                return;
+            }
+
+            AudioSource audioSource = prefabRoot.GetComponent<AudioSource>();
+            if (audioSource == null) audioSource = prefabRoot.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            // 3D 소리 (가정): 1m 안은 크게, 5m에서 거의 안 들림
+            audioSource.spatialBlend = 1f;
+            audioSource.minDistance = 1f;
+            audioSource.maxDistance = 5f;
+            prefabRoot.AddComponent<DiceSound>();
+
+            PrefabUtility.SaveAsPrefabAsset(prefabRoot, DicePrefabPath);
+            PrefabUtility.UnloadPrefabContents(prefabRoot);
+            Debug.Log($"[DiceTableSetup] 주사위 소리 추가: {DicePrefabPath}");
+        }
+
         private static void CreateFolders()
         {
             CreateFolderIfMissing("Assets/00. Study", "07. MR Strike");
