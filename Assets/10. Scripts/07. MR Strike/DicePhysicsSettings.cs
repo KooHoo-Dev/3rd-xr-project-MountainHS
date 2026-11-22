@@ -47,8 +47,11 @@ namespace StudyXR.Strike
         [Tooltip("이 속도 이하이면 멈춘 것으로 본다 (m/s)")]
         public float restSpeedMetersPerSecond = 0.02f;
 
-        [Tooltip("정지 속도 이하로 이 시간 이상 머물면 IsResting = true (초)")]
-        public float restHoldSeconds = 0.4f;
+        [Tooltip("이 회전 속도 이하이어야 멈춘 것으로 본다 (rad/s). 제자리에서 기울며 넘어가는 주사위를 멈춤으로 잘못 읽지 않게 한다")]
+        public float restAngularSpeedRadiansPerSecond = 0.3f;
+
+        [Tooltip("정지 속도·회전 속도 이하로 이 시간 이상 머물면 IsResting = true (초)")]
+        public float restHoldSeconds = 0.8f;
 
         [Tooltip("이 시간이 지나도 안 멈추면 지금 면으로 판정한다 (초). 턴 진행(#5)이 쓴다")]
         public float rollTimeoutSeconds = 6f;

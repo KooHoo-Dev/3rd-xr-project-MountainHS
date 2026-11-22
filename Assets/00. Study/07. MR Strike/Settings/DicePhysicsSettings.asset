@@ -22,6 +22,7 @@ MonoBehaviour:
   throwVelocityScale: 1.3
   throwSmoothingSeconds: 0.2
   restSpeedMetersPerSecond: 0.02
-  restHoldSeconds: 0.4
+  restAngularSpeedRadiansPerSecond: 0.3
+  restHoldSeconds: 0.8
   rollTimeoutSeconds: 6
   bounceThresholdMetersPerSecond: 0.3

@@ -122,13 +122,15 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 손에 쥐지 않았고 정지 속도 이하이면 정지 시간을 늘리고, 아니면 0으로 되돌린다.
+        /// 손에 쥐지 않았고 정지 속도·회전 속도 이하이면 정지 시간을 늘리고, 아니면 0으로 되돌린다.
+        /// 회전도 보는 까닭: 제자리에서 기울며 넘어가는 주사위는 직선 속도가 작아, 회전을 안 보면 면이 바뀌기 전에 판정된다.
         /// </summary>
         private void UpdateRestTimer()
         {
             bool isHeld = grabInteractable.isSelected;
             bool isMoving = body.linearVelocity.magnitude > settings.restSpeedMetersPerSecond;
-            if (isHeld || isMoving)
+            bool isSpinning = body.angularVelocity.magnitude > settings.restAngularSpeedRadiansPerSecond;
+            if (isHeld || isMoving || isSpinning)
             {
                 slowSeconds = 0f;
                 return;

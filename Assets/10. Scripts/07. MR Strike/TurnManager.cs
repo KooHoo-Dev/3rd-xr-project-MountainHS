@@ -81,6 +81,15 @@ namespace StudyXR.Strike
         public int ForcedThrowsRemaining => forcedThrowsRemaining;
 
         /// <summary>
+        /// 씬이 시작되면 바로 한 판을 시작한다. 시험용 컴포넌트 없이도 Play만 하면 게임이 돈다.
+        /// MR에서 책상에 탁자를 놓으면(<see cref="TablePlacer"/>) 그 자리에서 새 판을 다시 시작한다.
+        /// </summary>
+        private void Start()
+        {
+            StartGame();
+        }
+
+        /// <summary>
         /// 새 판을 시작한다. 판을 비우고 주사위 1개를 놓고, 모두에게 시작 개수를 주고 첫 사람(플레이어)의 차례로 간다.
         /// 시작·재시작 버튼이 부른다. 진행 중이던 AI 차례와 플레이어가 손에 든 주사위도 함께 정리한다.
         /// </summary>
@@ -149,7 +158,8 @@ namespace StudyXR.Strike
 
         /// <summary>
         /// 판정하고 결과에 따라 차례를 끝내거나 계속할지 고르는 상태로 간다.
-        /// 땄으면 끝, 못 땄어도 남은 개수가 0이면 끝, 남았으면 고른다.
+        /// 땄으면 끝, 판이 비었으면(X·장외로 전부 사라진 스트라이크 포함) 끝, 남은 개수가 0이면 끝, 아니면 고른다.
+        /// 판이 비어 끝나면 다음 사람의 <see cref="BeginTurn"/>이 빈 판을 보고 전부 던지게 한다.
         /// </summary>
         private void FinishRolling()
         {
@@ -158,6 +168,13 @@ namespace StudyXR.Strike
 
             bool hasTaken = LastJudgeResult.Taken > 0;
             if (hasTaken)
+            {
+                EndTurn();
+                return;
+            }
+
+            bool isBoardEmpty = boardDice.Count == 0;
+            if (isBoardEmpty)
             {
                 EndTurn();
                 return;
