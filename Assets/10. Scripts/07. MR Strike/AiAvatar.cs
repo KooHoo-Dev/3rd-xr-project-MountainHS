@@ -38,18 +38,45 @@ namespace StudyXR.Strike
         [Tooltip("손을 들어 올리는 높이 (m)")]
         [SerializeField] private float windupHeightMeters = 0.2f;
 
+        [Header("시선 (가정)")]
+        [Tooltip("플레이어를 한 번 바라보는 시간 범위 (초, 최소~최대 무작위)")]
+        [SerializeField] private Vector2 playerGazeSecondsRange = new Vector2(1f, 2.5f);
+        [Tooltip("탁자를 한 번 바라보는 시간 범위 (초, 최소~최대 무작위)")]
+        [SerializeField] private Vector2 tableGazeSecondsRange = new Vector2(3f, 6f);
+        [Tooltip("고개(몸)를 돌리는 속도 (도/초)")]
+        [SerializeField] private float turnSpeedDegreesPerSecond = 120f;
+
         // 손의 기본 위치 (로컬). 예고 동작이 끝나면 여기로 돌아온다.
         private Vector3 restHandPosition;
         private Coroutine bubbleRoutine;
 
-        // 아바타가 늘 바라볼 플레이어 머리 (Main Camera)
+        // ── 시선 ──
+        // 시선이 오가는 플레이어 머리 (Main Camera)
         private Transform head;
+        // 탁자 가운데를 보는 회전. 메뉴 4가 아바타를 탁자 가운데를 보게 만들어 두므로 시작 회전을 쓴다
+        private Quaternion tableGazeRotation;
+        // 말풍선의 아바타 기준 회전. 말풍선만 늘 플레이어를 향하게 할 때 쓴다
+        private Quaternion bubbleLocalRotation;
+        private GazeTarget gazeTarget = GazeTarget.Table;
+        private float gazeSecondsLeft;
+
+        /// <summary>
+        /// AI가 지금 바라보는 곳.
+        /// </summary>
+        private enum GazeTarget
+        {
+            Table,
+            Player,
+        }
 
         private void Awake()
         {
             restHandPosition = hand.localPosition;
+            tableGazeRotation = transform.rotation;
+            bubbleLocalRotation = bubbleText.transform.localRotation;
             bubbleText.text = "";
             ShowExpression(Expression.Neutral);
+            LookAt(GazeTarget.Table);
         }
 
         private void Start()
@@ -58,14 +85,69 @@ namespace StudyXR.Strike
         }
 
         /// <summary>
-        /// 플레이어 머리 쪽으로 몸(좌우 방향만)을 돌린다. 얼굴·말풍선 글자는 아바타 앞쪽에서만 읽히므로,
-        /// 탁자 옆이나 비스듬한 자리의 AI도 플레이어가 어디 서 있든 글자가 보이게 한다.
+        /// 시선을 탁자와 플레이어 사이에서 가끔 바꾸고, 그쪽으로 몸을 천천히 돌린다. 말풍선 글자는 시선과 상관없이 늘 플레이어를 향한다.
         /// </summary>
         private void LateUpdate()
         {
-            Vector3 towardHead = head.position - transform.position;
+            UpdateGazeTarget();
+            TurnTowardGaze();
+            FaceBubbleToPlayer();
+        }
+
+        /// <summary>
+        /// 이번 시선의 남은 시간이 다 되면 반대쪽(탁자 ↔ 플레이어)으로 바꾼다.
+        /// </summary>
+        private void UpdateGazeTarget()
+        {
+            gazeSecondsLeft -= Time.deltaTime;
+            if (gazeSecondsLeft > 0f) return;
+
+            GazeTarget nextTarget = gazeTarget == GazeTarget.Table ? GazeTarget.Player : GazeTarget.Table;
+            LookAt(nextTarget);
+        }
+
+        /// <summary>
+        /// 시선을 정하고 그 시선을 얼마나 유지할지 무작위로 고른다.
+        /// </summary>
+        /// <param name="target">바라볼 곳</param>
+        private void LookAt(GazeTarget target)
+        {
+            gazeTarget = target;
+            Vector2 secondsRange = target == GazeTarget.Player ? playerGazeSecondsRange : tableGazeSecondsRange;
+            gazeSecondsLeft = Random.Range(secondsRange.x, secondsRange.y);
+        }
+
+        /// <summary>
+        /// 지금 시선 쪽으로 몸(좌우 방향만)을 일정 속도로 돌린다.
+        /// </summary>
+        private void TurnTowardGaze()
+        {
+            Quaternion goalRotation = tableGazeRotation;
+            if (gazeTarget == GazeTarget.Player) goalRotation = RotationTowardHead(transform.position);
+
+            float maxDegrees = turnSpeedDegreesPerSecond * Time.deltaTime;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, goalRotation, maxDegrees);
+        }
+
+        /// <summary>
+        /// 말풍선을 플레이어 쪽으로 돌린다. 몸이 탁자를 보고 있어도 대사는 읽힌다.
+        /// </summary>
+        private void FaceBubbleToPlayer()
+        {
+            Quaternion facingHead = RotationTowardHead(bubbleText.transform.position);
+            bubbleText.transform.rotation = facingHead * bubbleLocalRotation;
+        }
+
+        /// <summary>
+        /// 주어진 위치에서 플레이어 머리를 보는 좌우 회전 (위아래는 보지 않는다).
+        /// </summary>
+        /// <param name="from">바라보는 쪽의 월드 위치</param>
+        /// <returns>+Z가 머리를 향하는 회전</returns>
+        private Quaternion RotationTowardHead(Vector3 from)
+        {
+            Vector3 towardHead = head.position - from;
             towardHead.y = 0f;
-            transform.rotation = Quaternion.LookRotation(towardHead, Vector3.up);
+            return Quaternion.LookRotation(towardHead, Vector3.up);
         }
 
         /// <summary>
@@ -88,10 +170,12 @@ namespace StudyXR.Strike
         /// <summary>
         /// 던지기 전 예고 동작. 스타일마다 다르게 움직여 어떤 던지기를 할지 미리 보여 준다.
         /// Smash = 손을 번쩍 들었다 내려찍기, Gentle = 작게 천천히 흔들기, Center = 손으로 원 그리기.
+        /// 던지기 직전이므로 시선을 탁자로 돌린다.
         /// </summary>
         /// <param name="style">AI의 던지기 방식</param>
         public IEnumerator PlayWindup(ThrowStyle style)
         {
+            LookAt(GazeTarget.Table);
             float elapsedSeconds = 0f;
             while (elapsedSeconds < windupSeconds)
             {
