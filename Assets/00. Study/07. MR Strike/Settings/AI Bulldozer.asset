@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2fe8d04cef85f9458b20b500393a482, type: 3}
+  m_Name: AI Bulldozer
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.AiPersonality
+  minMatchChanceToContinue: 0
+  minDiceToKeepThrowing: 1
+  throwStyle: 0
+  launchAngleDegrees: 15
+  throwSpeedScale: 1.4
+  aimErrorRadiusMeters: 0.08
+  headColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
+  windupLine: "\uB2E4 \uBD80\uC234 \uC8FC\uB9C8!"
+  stopLine: "\uCCC7, \uBA48\uCDB0?"
+  happyLine: "\uD558\uD558! \uB0B4 \uAC70\uB2E4!"
+  disappointedLine: "\uC73C\uC544, \uD55C \uBC88 \uB354!"

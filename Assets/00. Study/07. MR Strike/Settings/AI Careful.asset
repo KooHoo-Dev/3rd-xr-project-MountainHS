@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2fe8d04cef85f9458b20b500393a482, type: 3}
+  m_Name: AI Careful
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.Strike.AiPersonality
+  minMatchChanceToContinue: 0.7
+  minDiceToKeepThrowing: 3
+  throwStyle: 1
+  launchAngleDegrees: 60
+  throwSpeedScale: 1
+  aimErrorRadiusMeters: 0.02
+  headColor: {r: 0.3, g: 0.6, b: 0.95, a: 1}
+  windupLine: "\uC870\uC2EC\uC870\uC2EC..."
+  stopLine: "\uC5EC\uAE30\uC11C \uBA48\uCD9C\uAC8C\uC694."
+  happyLine: "\uB2E4\uD589\uC774\uB2E4."
+  disappointedLine: "\uC5ED\uC2DC \uBB34\uB9AC\uC600\uB098..."
