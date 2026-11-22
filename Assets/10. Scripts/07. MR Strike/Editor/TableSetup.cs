@@ -1,4 +1,6 @@
+using Unity.XR.CoreUtils;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace StudyXR.Strike.EditorTools
@@ -6,6 +8,7 @@ namespace StudyXR.Strike.EditorTools
     /// <summary>
     /// 에디터 메뉴 한 번으로 #4 원형 탁자 프리팹(4인·5인)을 만든다. 가운데 경기장과 자리마다 놓인 트레이가 들어 있다.
     /// 이미 있는 프리팹과 에셋은 덮어쓰지 않는다. 다시 만들려면 프리팹 파일을 지우고 메뉴를 다시 실행한다.
+    /// 이미 씬에 놓인 탁자의 크기·높이를 바꿀 때는 메뉴 "6. 탁자 크기·높이 적용"을 쓴다.
     /// </summary>
     /// <remarks>
     /// 선행: 메뉴 "1. 주사위 테이블 씬 만들기"가 Dice 프리팹을 만들어 둔 상태여야 한다.
@@ -17,15 +20,15 @@ namespace StudyXR.Strike.EditorTools
         private const string DicePrefabPath = StudyFolder + "/Prefabs/Dice.prefab";
 
         // ── 탁자 모양 (가정, m) ──
-        private const float TableRadius = 0.65f;
+        private const float TableRadius = 0.75f;
         private const float TableTopThickness = 0.04f;
-        private const float TableSurfaceHeight = 0.75f;
+        private const float TableSurfaceHeight = 0.68f;
         private const float PedestalRadius = 0.08f;
         private const float BaseRadius = 0.3f;
         private const float BaseThickness = 0.03f;
 
         // ── 트레이 모양 (가정, m) ──
-        private const float SeatDistanceFromCenter = 0.44f;
+        private const float SeatDistanceFromCenter = 0.52f;
         private const float TrayWidth = 0.30f;
         private const float TrayDepth = 0.13f;
         private const float TrayPlateThickness = 0.01f;
@@ -45,6 +48,157 @@ namespace StudyXR.Strike.EditorTools
             CreateTablePrefabIfMissing(4);
             CreateTablePrefabIfMissing(5);
             AssetDatabase.SaveAssets();
+        }
+
+        // ── 경기장 크기 (메뉴 6이 씬 경기장에 넣는 값, DiceArena 기본값과 같다, m) ──
+        private const float ArenaTrayWidth = 0.6f;
+        private const float ArenaTrayDepth = 0.41f;
+        private const float ArenaFloorRadiusX = 0.156f;
+        private const float ArenaFloorRadiusZ = 0.096f;
+        private const float ArenaRimRadiusX = 0.228f;
+        private const float ArenaRimRadiusZ = 0.15f;
+        private const float ArenaBowlDepth = 0.045f;
+
+        // ── 사람·시점 (메뉴 6, m) ──
+        // 시뮬레이터(바닥 추적이 없을 때) 눈높이
+        private const float SimulatorEyeHeight = 1.6f;
+        // AI 아바타 자리 = 트레이에서 탁자 바깥으로 이만큼 + 위로 이만큼 (메뉴 4 TurnSystemSetup.CreateAvatar와 같은 값)
+        private const float AvatarDistanceBehindTray = 0.35f;
+        private const float AvatarChestHeight = 0.45f;
+
+        /// <summary>
+        /// 이미 씬에 놓인 원형 탁자에 지금의 크기·높이 값을 제자리에서 적용한다. 메뉴 3은 있는 프리팹을 건너뛰고,
+        /// 프리팹을 다시 만들면 씬 참조가 끊기므로 이 메뉴가 씬 오브젝트(프리팹 인스턴스 덮어쓰기)를 직접 고친다.
+        /// 윗판·기둥 높이 → 경기장 크기·깊이 → 트레이 거리 → AI 아바타 자리 → 시뮬레이터 눈높이 순서로 바꾸고 씬을 저장 대기 상태로 둔다.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">씬에 DiceTable이 없을 때</exception>
+        [MenuItem("StudyXR/MR Strike/6. 탁자 크기·높이 적용")]
+        public static void ApplyTableSizeToScene()
+        {
+            DiceTable table = Object.FindFirstObjectByType<DiceTable>();
+            if (table == null) throw new System.InvalidOperationException("씬에 DiceTable이 없습니다. 원형 탁자 프리팹을 먼저 놓으세요.");
+
+            // 트레이가 움직이기 전에 아바타마다 가장 가까운 트레이를 짝지어 둔다
+            AiAvatar[] avatars = Object.FindObjectsByType<AiAvatar>(FindObjectsSortMode.None);
+            DiceTray[] traysOfAvatars = new DiceTray[avatars.Length];
+            for (int index = 0; index < avatars.Length; index++)
+            {
+                traysOfAvatars[index] = FindNearestTray(table.SeatTrays, avatars[index].transform.position);
+            }
+
+            ApplyTableHeight(table);
+            ApplyArenaSize(table.Arena);
+            ApplySeatDistance(table);
+            for (int index = 0; index < avatars.Length; index++)
+            {
+                PlaceAvatarBehindTray(avatars[index], traysOfAvatars[index], table);
+            }
+            ApplySimulatorEyeHeight();
+
+            EditorSceneManager.MarkSceneDirty(table.gameObject.scene);
+            Debug.Log($"[TableSetup] 탁자 크기·높이 적용: 윗면 {TableSurfaceHeight}m, 반지름 {TableRadius}m, 자리 거리 {SeatDistanceFromCenter}m, 아바타 {avatars.Length}명. 씬을 저장하세요.");
+        }
+
+        /// <summary>
+        /// 윗판·기둥의 높이와 지름, DiceTable의 윗면 높이 값을 맞춘다.
+        /// </summary>
+        private static void ApplyTableHeight(DiceTable table)
+        {
+            SerializedObject serializedTable = new SerializedObject(table);
+            serializedTable.FindProperty("tableTopHeightMeters").floatValue = TableSurfaceHeight;
+            serializedTable.ApplyModifiedProperties();
+
+            Transform tableTop = table.transform.Find("Table Top");
+            Undo.RecordObject(tableTop, "Apply Table Size");
+            tableTop.localPosition = new Vector3(0f, TableSurfaceHeight - TableTopThickness * 0.5f, 0f);
+            tableTop.localScale = new Vector3(TableRadius * 2f, TableTopThickness * 0.5f, TableRadius * 2f);
+
+            Transform pedestal = table.transform.Find("Table Pedestal");
+            Undo.RecordObject(pedestal, "Apply Table Size");
+            float pedestalHeight = TableSurfaceHeight - TableTopThickness - BaseThickness;
+            pedestal.localPosition = new Vector3(0f, BaseThickness + pedestalHeight * 0.5f, 0f);
+            pedestal.localScale = new Vector3(PedestalRadius * 2f, pedestalHeight * 0.5f, PedestalRadius * 2f);
+        }
+
+        /// <summary>
+        /// 경기장 크기·그릇 깊이 값을 바꾸고, 그릇 바닥이 윗면 높이에 오게 올린 뒤 메쉬를 다시 만든다 (메쉬는 씬에 저장된다).
+        /// </summary>
+        private static void ApplyArenaSize(DiceArena arena)
+        {
+            SerializedObject serializedArena = new SerializedObject(arena);
+            serializedArena.FindProperty("trayWidthMeters").floatValue = ArenaTrayWidth;
+            serializedArena.FindProperty("trayDepthMeters").floatValue = ArenaTrayDepth;
+            serializedArena.FindProperty("floorRadiusXMeters").floatValue = ArenaFloorRadiusX;
+            serializedArena.FindProperty("floorRadiusZMeters").floatValue = ArenaFloorRadiusZ;
+            serializedArena.FindProperty("rimRadiusXMeters").floatValue = ArenaRimRadiusX;
+            serializedArena.FindProperty("rimRadiusZMeters").floatValue = ArenaRimRadiusZ;
+            serializedArena.FindProperty("bowlDepthMeters").floatValue = ArenaBowlDepth;
+            serializedArena.ApplyModifiedProperties();
+
+            Undo.RecordObject(arena.transform, "Apply Table Size");
+            arena.transform.localPosition = new Vector3(0f, TableSurfaceHeight + ArenaBowlDepth, 0f);
+            arena.Build();
+        }
+
+        /// <summary>
+        /// 자리 트레이를 지금 방향 그대로 두고 탁자 가운데에서 SeatDistanceFromCenter만큼, 윗면 높이 위로 옮긴다.
+        /// </summary>
+        private static void ApplySeatDistance(DiceTable table)
+        {
+            foreach (DiceTray tray in table.SeatTrays)
+            {
+                Vector3 outwardDirection = tray.transform.localPosition;
+                outwardDirection.y = 0f;
+                outwardDirection.Normalize();
+
+                Undo.RecordObject(tray.transform, "Apply Table Size");
+                tray.transform.localPosition = outwardDirection * SeatDistanceFromCenter + Vector3.up * (TableSurfaceHeight + TrayPlateThickness);
+            }
+        }
+
+        /// <summary>
+        /// 아바타를 짝지은 트레이 바깥쪽 뒤, 가슴 높이에 놓는다. 방향(탁자 가운데를 봄)은 그대로 둔다.
+        /// </summary>
+        private static void PlaceAvatarBehindTray(AiAvatar avatar, DiceTray tray, DiceTable table)
+        {
+            Vector3 outwardDirection = tray.transform.position - table.transform.position;
+            outwardDirection.y = 0f;
+            outwardDirection.Normalize();
+
+            Undo.RecordObject(avatar.transform, "Apply Table Size");
+            avatar.transform.position = tray.transform.position + outwardDirection * AvatarDistanceBehindTray + Vector3.up * AvatarChestHeight;
+        }
+
+        /// <summary>
+        /// XR Origin의 카메라 높이 오프셋(바닥 추적이 없는 시뮬레이터에서 눈높이)을 바꾼다. 헤드셋 바닥 추적에서는 실제 키가 쓰인다.
+        /// </summary>
+        private static void ApplySimulatorEyeHeight()
+        {
+            XROrigin origin = Object.FindFirstObjectByType<XROrigin>();
+            Undo.RecordObject(origin, "Apply Table Size");
+            origin.CameraYOffset = SimulatorEyeHeight;
+        }
+
+        /// <summary>
+        /// 아바타가 어느 자리의 사람인지 알기 위해 수평 거리가 가장 가까운 트레이를 찾는다.
+        /// </summary>
+        /// <param name="seatTrays">탁자의 자리 트레이들</param>
+        /// <param name="position">기준 월드 위치 (아바타 위치)</param>
+        /// <returns>수평 거리가 가장 가까운 트레이</returns>
+        private static DiceTray FindNearestTray(DiceTray[] seatTrays, Vector3 position)
+        {
+            DiceTray nearestTray = seatTrays[0];
+            float nearestDistance = float.MaxValue;
+            foreach (DiceTray tray in seatTrays)
+            {
+                Vector3 offset = tray.transform.position - position;
+                offset.y = 0f;
+                if (offset.magnitude >= nearestDistance) continue;
+
+                nearestDistance = offset.magnitude;
+                nearestTray = tray;
+            }
+            return nearestTray;
         }
 
         private static void CreateFolderIfMissing(string name)
