@@ -20,7 +20,7 @@ namespace StudyXR.Strike
         [SerializeField] private DiceTray[] seatTrays;
 
         [Tooltip("탁자 윗면의 높이 (m, 탁자 원점 기준). 진짜 책상에 놓을 때 이 높이만큼 내려서 윗면을 책상에 맞춘다. 메뉴 3의 TableSurfaceHeight와 같은 값")]
-        [SerializeField] private float tableTopHeightMeters = 0.75f;
+        [SerializeField] private float tableTopHeightMeters = 0.68f;
 
         public DiceArena Arena => arena;
         public DiceTray[] SeatTrays => seatTrays;

@@ -20,9 +20,9 @@ namespace StudyXR.Strike
 
         [Header("트레이 (가정)")]
         [Tooltip("트레이 안쪽 가로 길이 (m, 로컬 X)")]
-        [SerializeField] private float trayWidthMeters = 0.5f;
+        [SerializeField] private float trayWidthMeters = 0.6f;
         [Tooltip("트레이 안쪽 세로 길이 (m, 로컬 Z)")]
-        [SerializeField] private float trayDepthMeters = 0.34f;
+        [SerializeField] private float trayDepthMeters = 0.41f;
         [Tooltip("트레이 윗면 위로 솟은 벽 높이 (m). 주사위가 책상 밖으로 튀지 않게 막는다")]
         [SerializeField] private float wallHeightMeters = 0.06f;
         [Tooltip("벽 두께 (m). 트레이 바깥쪽으로 붙는다")]
@@ -30,17 +30,17 @@ namespace StudyXR.Strike
 
         [Header("그릇 (가정)")]
         [Tooltip("평평한 타원 바닥의 가로 반지름 (m)")]
-        [SerializeField] private float floorRadiusXMeters = 0.13f;
+        [SerializeField] private float floorRadiusXMeters = 0.156f;
         [Tooltip("평평한 타원 바닥의 세로 반지름 (m)")]
-        [SerializeField] private float floorRadiusZMeters = 0.08f;
+        [SerializeField] private float floorRadiusZMeters = 0.096f;
         [Tooltip("그릇 맨 위 가장자리의 가로 반지름 (m). 이 타원 밖은 장외")]
-        [SerializeField] private float rimRadiusXMeters = 0.19f;
+        [SerializeField] private float rimRadiusXMeters = 0.228f;
         [Tooltip("그릇 맨 위 가장자리의 세로 반지름 (m). 이 타원 밖은 장외")]
-        [SerializeField] private float rimRadiusZMeters = 0.125f;
+        [SerializeField] private float rimRadiusZMeters = 0.15f;
         [Tooltip("계단 수 (턱 수). 2 이상")]
         [SerializeField] private int stepCount = 5;
         [Tooltip("트레이 윗면에서 바닥까지 깊이 (m)")]
-        [SerializeField] private float bowlDepthMeters = 0.03f;
+        [SerializeField] private float bowlDepthMeters = 0.045f;
         [Tooltip("타원 둘레를 나누는 조각 수. 클수록 매끈하다")]
         [SerializeField] private int ellipseSegmentCount = 64;
 
