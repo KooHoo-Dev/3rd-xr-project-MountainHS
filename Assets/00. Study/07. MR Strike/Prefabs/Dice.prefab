@@ -1419,7 +1419,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
+  MinDistance: 2
   MaxDistance: 5
   Pan2D: 0
   rolloffMode: 0
@@ -1514,9 +1514,10 @@ MonoBehaviour:
   minSoundIntervalSeconds: 0.05
   rollClickSpacingMeters: 0.02
   minRollSpeedMetersPerSecond: 0.05
-  rollVolumeScale: 0.4
-  throwVolume: 0.5
-  hitVolume: 0.8
+  rollVolumeScale: 0.6
+  minHitLoudness: 0.35
+  throwVolume: 1
+  hitVolume: 1
 --- !u!1 &7999021139028895789
 GameObject:
   m_ObjectHideFlags: 0

@@ -16,7 +16,9 @@ namespace StudyXR.Strike
         // ── 합성 소리 ──
         private const int SampleRate = 44100;
         // 짝 맞춤 "띵" 크기 (0~1). 정적 호출이라 Inspector 대신 여기서 바꾼다
-        private const float MatchVolume = 0.7f;
+        private const float MatchVolume = 1f;
+        // 합성 클립의 가장 큰 진폭. 클립마다 이 값에 맞춰 키워서 헤드셋 스피커에서도 잘 들리게 한다
+        private const float SynthesizedPeak = 0.95f;
 
         [Header("클립 (비우면 합성 소리)")]
         [SerializeField] private AudioClip throwClip;
@@ -27,6 +29,8 @@ namespace StudyXR.Strike
         [SerializeField] private float minHitSpeedMetersPerSecond = 0.15f;
         [Tooltip("이 속도 이상으로 부딪히면 가장 큰 소리 (m/s)")]
         [SerializeField] private float loudestHitSpeedMetersPerSecond = 1.5f;
+        [Tooltip("아무리 약하게 부딪혀도 이 비율보다 작게는 내지 않는다 (0~1). 두 번째 튕김부터 소리가 묻히지 않게 한다")]
+        [Range(0f, 1f)] [SerializeField] private float minHitLoudness = 0.35f;
         [Tooltip("소리 사이 최소 간격 (초). 한꺼번에 여러 번 닿아도 소리가 겹쳐 시끄럽지 않게 한다")]
         [SerializeField] private float minSoundIntervalSeconds = 0.05f;
 
@@ -36,11 +40,11 @@ namespace StudyXR.Strike
         [Tooltip("이 속도보다 느리면 구르는 소리를 내지 않는다 (m/s)")]
         [SerializeField] private float minRollSpeedMetersPerSecond = 0.05f;
         [Tooltip("구르는 소리 크기 배율 (부딪힘 소리 기준)")]
-        [SerializeField] private float rollVolumeScale = 0.4f;
+        [SerializeField] private float rollVolumeScale = 0.6f;
 
         [Header("소리 크기 (가정)")]
-        [Range(0f, 1f)] [SerializeField] private float throwVolume = 0.5f;
-        [Range(0f, 1f)] [SerializeField] private float hitVolume = 0.8f;
+        [Range(0f, 1f)] [SerializeField] private float throwVolume = 1f;
+        [Range(0f, 1f)] [SerializeField] private float hitVolume = 1f;
 
         // 합성 클립은 모든 주사위가 같은 것을 쓴다 (처음 필요할 때 한 번 만든다)
         private static AudioClip synthesizedThrowClip;
@@ -88,8 +92,7 @@ namespace StudyXR.Strike
             float hitSpeed = collision.relativeVelocity.magnitude;
             if (hitSpeed < minHitSpeedMetersPerSecond) return;
 
-            float loudness = Mathf.Clamp01(hitSpeed / loudestHitSpeedMetersPerSecond);
-            PlayLimited(HitClip(), hitVolume * loudness);
+            PlayLimited(HitClip(), hitVolume * LoudnessFor(hitSpeed));
         }
 
         private void OnCollisionStay(Collision collision)
@@ -117,8 +120,18 @@ namespace StudyXR.Strike
             if (rolledMetersSinceClick < rollClickSpacingMeters) return;
 
             rolledMetersSinceClick = 0f;
-            float loudness = Mathf.Clamp01(speed / loudestHitSpeedMetersPerSecond);
-            PlayLimited(HitClip(), hitVolume * rollVolumeScale * loudness);
+            PlayLimited(HitClip(), hitVolume * rollVolumeScale * LoudnessFor(speed));
+        }
+
+        /// <summary>
+        /// 속도를 소리 크기 비율로 바꾼다. 느려도 <see cref="minHitLoudness"/> 아래로는 내려가지 않는다.
+        /// </summary>
+        /// <param name="speed">부딪힌 속도 또는 구르는 속도 (m/s)</param>
+        /// <returns>0~1 비율</returns>
+        private float LoudnessFor(float speed)
+        {
+            float speedRatio = Mathf.Clamp01(speed / loudestHitSpeedMetersPerSecond);
+            return Mathf.Lerp(minHitLoudness, 1f, speedRatio);
         }
 
         /// <summary>
@@ -165,7 +178,7 @@ namespace StudyXR.Strike
             for (int index = 0; index < samples.Length; index++)
             {
                 float time = (float)index / SampleRate;
-                float envelope = Mathf.Exp(-time * 120f);
+                float envelope = Mathf.Exp(-time * 60f);
                 float noise = Random.Range(-1f, 1f) * 0.6f;
                 float tone = Mathf.Sin(2f * Mathf.PI * 2400f * time) * 0.4f;
                 samples[index] = (noise + tone) * envelope;
@@ -210,8 +223,19 @@ namespace StudyXR.Strike
             return CreateClip("Dice Match Chime", samples);
         }
 
+        /// <summary>
+        /// 가장 큰 진폭을 <see cref="SynthesizedPeak"/>에 맞춘 클립을 만든다.
+        /// </summary>
         private static AudioClip CreateClip(string clipName, float[] samples)
         {
+            float peak = 0f;
+            foreach (float sample in samples) peak = Mathf.Max(peak, Mathf.Abs(sample));
+            if (peak > 0f)
+            {
+                float gain = SynthesizedPeak / peak;
+                for (int index = 0; index < samples.Length; index++) samples[index] *= gain;
+            }
+
             AudioClip clip = AudioClip.Create(clipName, samples.Length, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;

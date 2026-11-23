@@ -57,9 +57,9 @@ namespace StudyXR.Strike.EditorTools
             AudioSource audioSource = prefabRoot.GetComponent<AudioSource>();
             if (audioSource == null) audioSource = prefabRoot.AddComponent<AudioSource>();
             audioSource.playOnAwake = false;
-            // 3D 소리 (가정): 1m 안은 크게, 5m에서 거의 안 들림
+            // 3D 소리 (가정): 2m 안은 줄지 않고 크게 (테이블 둘레에 선 사람 거리), 5m에서 거의 안 들림
             audioSource.spatialBlend = 1f;
-            audioSource.minDistance = 1f;
+            audioSource.minDistance = 2f;
             audioSource.maxDistance = 5f;
             prefabRoot.AddComponent<DiceSound>();
 

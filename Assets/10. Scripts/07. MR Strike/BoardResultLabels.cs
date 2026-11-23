@@ -84,7 +84,6 @@ namespace StudyXR.Strike
             label.fontSize = fontSize;
             label.alignment = TextAlignmentOptions.Center;
             label.rectTransform.sizeDelta = new Vector2(0.1f, 0.06f);
-            labelObject.AddComponent<TextBackPanel>();
             labels.Add(label);
             return label;
         }
