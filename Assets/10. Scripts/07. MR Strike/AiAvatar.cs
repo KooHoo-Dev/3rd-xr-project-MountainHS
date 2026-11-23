@@ -75,6 +75,7 @@ namespace StudyXR.Strike
             tableGazeRotation = transform.rotation;
             bubbleLocalRotation = bubbleText.transform.localRotation;
             bubbleText.text = "";
+            bubbleText.gameObject.AddComponent<TextBackPanel>();
             ShowExpression(Expression.Neutral);
             LookAt(GazeTarget.Table);
         }

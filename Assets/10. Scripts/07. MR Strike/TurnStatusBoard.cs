@@ -27,6 +27,14 @@ namespace StudyXR.Strike
         [SerializeField] private float heightAboveArenaMeters = 0.5f;
 
         /// <summary>
+        /// 안내 글자 뒤에 검은 판을 깐다.
+        /// </summary>
+        private void Awake()
+        {
+            guideText.gameObject.AddComponent<TextBackPanel>();
+        }
+
+        /// <summary>
         /// 글자를 경기장 위에 놓고 머리를 바라보게 한 뒤 내용을 갱신한다.
         /// </summary>
         private void LateUpdate()
