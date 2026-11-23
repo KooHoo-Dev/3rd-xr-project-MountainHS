@@ -86,7 +86,7 @@ namespace StudyXR.Strike
         /// <returns>패널 본문 (TMP 서식 포함)</returns>
         private static string BuildBody()
         {
-            return "<b>MR 스트라이크 조작법</b>\n\n" +
+            return "<b>스트라이크 조작법</b>\n\n" +
                    "왼 스틱 : 이동 · 오른 스틱 : 회전\n" +
                    "그립 : 내 트레이 주사위 잡기\n" +
                    "잡은 채 휘두르고 놓기 : 던지기\n" +
